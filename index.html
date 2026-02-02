@@ -88,6 +88,16 @@
       letter-spacing: 3px; transition: color .3s;
     }
     .mobile-menu a:hover { color: var(--neon); }
+    .mobile-close {
+      position: absolute; top: 1rem; right: 1.5rem;
+      background: none; border: none; color: #fff;
+      font-size: 2.5rem; cursor: pointer; line-height: 1;
+      width: 48px; height: 48px;
+      display: flex; align-items: center; justify-content: center;
+      transition: color .3s;
+    }
+    .mobile-close:hover { color: var(--neon); }
+
     .mobile-menu .mobile-cta {
       background: var(--neon); color: #000; padding: .8rem 2rem;
       font-family: 'Inter', sans-serif; font-weight: 700; font-size: .85rem;
@@ -408,6 +418,7 @@
 
   <!-- MOBILE MENU -->
   <div class="mobile-menu" id="mobileMenu">
+    <button class="mobile-close" id="mobileClose" aria-label="Close menu">&times;</button>
     <a href="#workouts" class="mobile-nav-link">Workouts</a>
     <a href="#format" class="mobile-nav-link">Race Format</a>
     <a href="#timer" class="mobile-nav-link">Sim Timer</a>
@@ -763,12 +774,14 @@
       mobileMenu.classList.toggle('open');
       document.body.style.overflow = mobileMenu.classList.contains('open') ? 'hidden' : '';
     });
+    function closeMenu() {
+      hamburger.classList.remove('active');
+      mobileMenu.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    document.getElementById('mobileClose').addEventListener('click', closeMenu);
     document.querySelectorAll('.mobile-nav-link').forEach(link => {
-      link.addEventListener('click', () => {
-        hamburger.classList.remove('active');
-        mobileMenu.classList.remove('open');
-        document.body.style.overflow = '';
-      });
+      link.addEventListener('click', closeMenu);
     });
   </script>
 
