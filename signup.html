@@ -177,9 +177,8 @@
           document.getElementById('displayName').value,
           document.getElementById('division').value || null
         )
-        form.style.display = 'none'
-        linksEl.style.display = 'none'
-        successEl.classList.add('show')
+        btn.textContent = 'Welcome! Redirecting...'
+        window.location.href = 'dashboard.html'
       } catch (err) {
         errorEl.textContent = err.message
         errorEl.classList.add('show')
