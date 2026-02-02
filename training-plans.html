@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Training Plans — HYROX SIM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/global.css">
+  <style>
+    .plans-page {
+      min-height: 100vh; padding: 6rem 2rem 4rem;
+      background: radial-gradient(ellipse at 50% 0%, rgba(200,255,0,.04) 0%, transparent 60%), var(--dark);
+    }
+    .plans-container { max-width: 1000px; margin: 0 auto; }
+
+    .plans-hero { text-align: center; margin-bottom: 3rem; }
+    .plans-hero h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      color: #fff; letter-spacing: 2px;
+    }
+    .plans-hero h1 .accent { color: var(--neon); }
+    .plans-hero p { color: var(--text-muted); margin-top: .5rem; max-width: 550px; margin-inline: auto; line-height: 1.6; }
+
+    /* Active Plan Banner */
+    .active-plan-banner {
+      background: rgba(200,255,0,.05); border: 1px solid rgba(200,255,0,.2);
+      padding: 1.5rem; margin-bottom: 2rem; display: none;
+    }
+    .active-plan-banner.show { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+    .active-plan-info h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.3rem; color: var(--neon);
+    }
+    .active-plan-info p { color: var(--text-muted); font-size: .85rem; margin-top: .2rem; }
+
+    /* Plan Cards */
+    .plans-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
+      gap: 1.5rem;
+    }
+    .plan-card {
+      background: var(--card); border: 1px solid var(--card-border);
+      padding: 2rem; position: relative; overflow: hidden;
+      transition: border-color .3s;
+    }
+    .plan-card:hover { border-color: #444; }
+    .plan-card.active-card { border-color: var(--neon); }
+    .plan-card::after {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: var(--neon); transform: scaleX(0);
+      transform-origin: left; transition: transform .4s;
+    }
+    .plan-card:hover::after { transform: scaleX(1); }
+
+    .plan-card-header { margin-bottom: 1rem; }
+    .plan-card h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.6rem; color: #fff; letter-spacing: 1px;
+    }
+    .plan-card-meta {
+      display: flex; gap: .8rem; flex-wrap: wrap; margin-top: .5rem;
+    }
+    .plan-card-meta .badge { font-size: .65rem; }
+    .plan-card p.plan-desc {
+      color: var(--text-muted); font-size: .9rem; line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+    .plan-card p.plan-target {
+      color: var(--text-muted); font-size: .8rem; margin-bottom: 1rem;
+      font-style: italic;
+    }
+
+    /* Weekly Schedule */
+    .week-preview {
+      margin-bottom: 1.5rem;
+    }
+    .week-preview h4 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem; color: #fff; margin-bottom: .8rem;
+    }
+    .week-days {
+      display: grid; grid-template-columns: repeat(7, 1fr); gap: .3rem;
+    }
+    .week-day {
+      text-align: center; padding: .5rem .2rem;
+      background: rgba(255,255,255,.02);
+      border: 1px solid rgba(255,255,255,.05);
+    }
+    .week-day-label {
+      font-size: .6rem; text-transform: uppercase; letter-spacing: 1px;
+      color: var(--text-muted); margin-bottom: .3rem;
+    }
+    .week-day-type {
+      font-size: .65rem; color: #fff; font-weight: 600;
+      line-height: 1.3;
+    }
+    .week-day.rest .week-day-type { color: var(--text-muted); }
+    .week-day.run .week-day-type { color: var(--success); }
+    .week-day.strength .week-day-type { color: #6495ed; }
+    .week-day.sim .week-day-type { color: var(--neon); }
+    .week-day.conditioning .week-day-type { color: var(--accent); }
+    .week-day.mobility .week-day-type { color: #c8b4ff; }
+
+    .plan-actions { display: flex; gap: .8rem; }
+
+    /* Plan Detail Modal */
+    .plan-detail-overlay {
+      position: fixed; inset: 0; z-index: 400;
+      background: rgba(0,0,0,.8);
+      display: none; align-items: center; justify-content: center;
+      padding: 2rem;
+    }
+    .plan-detail-overlay.show { display: flex; }
+    .plan-detail-content {
+      background: var(--dark); border: 1px solid var(--card-border);
+      max-width: 700px; width: 100%; max-height: 80vh;
+      overflow-y: auto; padding: 2.5rem;
+      position: relative;
+    }
+    .plan-detail-close {
+      position: absolute; top: 1rem; right: 1rem;
+      background: none; border: none; color: #fff;
+      font-size: 2rem; cursor: pointer; width: 48px; height: 48px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .plan-detail-content h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem; color: #fff; letter-spacing: 2px;
+      margin-bottom: 1rem;
+    }
+    .plan-detail-content h2 .accent { color: var(--neon); }
+
+    .week-block { margin-bottom: 2rem; }
+    .week-block h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.2rem; color: var(--neon); margin-bottom: .8rem;
+    }
+    .day-row {
+      display: flex; gap: .5rem; align-items: baseline;
+      padding: .5rem 0; border-bottom: 1px solid rgba(255,255,255,.05);
+    }
+    .day-row-label {
+      width: 60px; color: var(--text-muted); font-size: .75rem;
+      text-transform: uppercase; font-weight: 600; flex-shrink: 0;
+    }
+    .day-row-content { color: #fff; font-size: .85rem; }
+    .day-row.rest-day .day-row-content { color: var(--text-muted); font-style: italic; }
+
+    @media (max-width: 768px) {
+      .plans-page { padding: 5rem 1rem 3rem; }
+      .plans-grid { grid-template-columns: 1fr; }
+      .week-days { grid-template-columns: repeat(7, 1fr); }
+      .week-day-type { font-size: .55rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="logo">HYROX<span>SIM</span></a>
+    <ul class="nav-links">
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="workouts.html">Workouts</a></li>
+      <li><a href="pace-calculator.html">PaceMe</a></li>
+      <li><a href="training-plans.html" class="active">Plans</a></li>
+    </ul>
+    <div class="nav-right">
+      <a href="login.html" class="nav-cta">Sign In</a>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+  <div class="mobile-menu" id="mobileMenu">
+    <button class="mobile-close" id="mobileClose" aria-label="Close menu">&times;</button>
+    <a href="dashboard.html" class="mobile-nav-link">Dashboard</a>
+    <a href="workouts.html" class="mobile-nav-link">Workouts</a>
+    <a href="index.html#timer" class="mobile-nav-link">Sim Timer</a>
+    <a href="pace-calculator.html" class="mobile-nav-link">PaceMe</a>
+    <a href="race-history.html" class="mobile-nav-link">Races</a>
+    <a href="training-plans.html" class="mobile-nav-link">Training Plans</a>
+    <a href="profile.html" class="mobile-nav-link">Profile</a>
+  </div>
+
+  <div class="plans-page">
+    <div class="plans-container">
+
+      <div class="plans-hero fade-in">
+        <h1>TRAINING <span class="accent">PLANS</span></h1>
+        <p>Structured programs designed for every level — from first-time racer to podium chaser. Pick a plan and start training today.</p>
+      </div>
+
+      <div class="active-plan-banner" id="activeBanner">
+        <div class="active-plan-info">
+          <h3 id="activePlanName">Loading...</h3>
+          <p id="activePlanStatus">Week 1 of 8</p>
+        </div>
+        <button class="btn-secondary" id="stopPlanBtn" style="padding:.6rem 1.2rem;font-size:.8rem;">Stop Plan</button>
+      </div>
+
+      <div class="plans-grid" id="plansGrid">
+        <div style="text-align:center;padding:3rem;color:var(--text-muted);grid-column:1/-1;">Loading plans...</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Detail Overlay -->
+  <div class="plan-detail-overlay" id="planOverlay">
+    <div class="plan-detail-content" id="planDetailContent">
+      <button class="plan-detail-close" id="planDetailClose">&times;</button>
+      <div id="planDetailBody"></div>
+    </div>
+  </div>
+
+  <footer>
+    <a href="index.html" class="logo">HYROX<span>SIM</span></a>
+    <p>&copy; 2025 HyroxSim. Train hard. Race harder.</p>
+  </footer>
+
+  <script type="module">
+    import { initPage, showToast } from './js/shared.js'
+    import { supabase } from './js/supabase-client.js'
+
+    initPage()
+
+    const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    let plans = []
+    let activePlanId = null
+    let planStartDate = null
+
+    // ── Load Plans ──
+    const { data } = await supabase.from('training_plans').select('*').order('difficulty')
+    plans = data || []
+
+    // ── Check Active Plan ──
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('active_plan_id, plan_start_date')
+        .eq('id', session.user.id)
+        .single()
+
+      if (profile?.active_plan_id) {
+        activePlanId = profile.active_plan_id
+        planStartDate = profile.plan_start_date
+      }
+    }
+
+    renderPlans()
+
+    function getWeekNumber(startDate) {
+      if (!startDate) return 1
+      const start = new Date(startDate)
+      const now = new Date()
+      const diff = Math.floor((now - start) / (7 * 24 * 60 * 60 * 1000))
+      return Math.max(1, diff + 1)
+    }
+
+    function getDayType(dayText) {
+      const t = dayText.toLowerCase()
+      if (t.includes('rest') || t.includes('off')) return 'rest'
+      if (t.includes('run') || t.includes('tempo') || t.includes('interval')) return 'run'
+      if (t.includes('strength') || t.includes('deadlift') || t.includes('squat')) return 'strength'
+      if (t.includes('sim') || t.includes('hyrox')) return 'sim'
+      if (t.includes('condition') || t.includes('metcon') || t.includes('emom') || t.includes('amrap')) return 'conditioning'
+      if (t.includes('mobil') || t.includes('yoga') || t.includes('recovery')) return 'mobility'
+      return 'conditioning'
+    }
+
+    function renderPlans() {
+      const grid = document.getElementById('plansGrid')
+
+      if (plans.length === 0) {
+        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><h3>No Plans Available</h3><p>Run the seed SQL to add training plans.</p></div>`
+        return
+      }
+
+      // Active plan banner
+      if (activePlanId) {
+        const activePlan = plans.find(p => p.id === activePlanId)
+        if (activePlan) {
+          const week = getWeekNumber(planStartDate)
+          document.getElementById('activePlanName').textContent = activePlan.title
+          document.getElementById('activePlanStatus').textContent = `Week ${Math.min(week, activePlan.duration_weeks)} of ${activePlan.duration_weeks}`
+          document.getElementById('activeBanner').classList.add('show')
+        }
+      }
+
+      grid.innerHTML = plans.map(plan => {
+        const isActive = plan.id === activePlanId
+        const schedule = plan.schedule || []
+        const week1 = schedule[0] || {}
+        const diffClass = plan.difficulty === 'beginner' ? 'diff-beginner' : plan.difficulty === 'intermediate' ? 'diff-intermediate' : 'diff-advanced'
+        const diffStyle = plan.difficulty === 'beginner' ? 'background:rgba(0,200,83,.1);color:var(--success)' : plan.difficulty === 'intermediate' ? 'background:rgba(255,165,0,.1);color:#ffa500' : 'background:rgba(255,60,0,.1);color:var(--accent)'
+
+        // Week 1 preview
+        let weekPreview = ''
+        if (week1.days) {
+          weekPreview = `
+            <div class="week-preview">
+              <h4>Week 1 Preview</h4>
+              <div class="week-days">
+                ${week1.days.map((d, i) => {
+                  const type = getDayType(d)
+                  const shortLabel = d.length > 12 ? d.substring(0, 10) + '...' : d
+                  return `
+                    <div class="week-day ${type}">
+                      <div class="week-day-label">${dayLabels[i] || ''}</div>
+                      <div class="week-day-type">${shortLabel}</div>
+                    </div>
+                  `
+                }).join('')}
+              </div>
+            </div>
+          `
+        }
+
+        return `
+          <div class="plan-card fade-in ${isActive ? 'active-card' : ''}" data-id="${plan.id}">
+            <div class="plan-card-header">
+              <h3>${plan.title}</h3>
+              <div class="plan-card-meta">
+                <span class="badge" style="${diffStyle}">${plan.difficulty}</span>
+                <span class="badge badge-muted">${plan.duration_weeks} weeks</span>
+              </div>
+            </div>
+            ${plan.target_audience ? `<p class="plan-target">Best for: ${plan.target_audience}</p>` : ''}
+            <p class="plan-desc">${plan.description || ''}</p>
+            ${weekPreview}
+            <div class="plan-actions">
+              ${isActive
+                ? '<span style="color:var(--neon);font-weight:700;font-size:.85rem;text-transform:uppercase;letter-spacing:1px;">Active Plan</span>'
+                : `<button class="btn-primary start-plan-btn" data-id="${plan.id}" style="padding:.6rem 1.5rem;font-size:.8rem;">Start Plan</button>`
+              }
+              <button class="btn-secondary view-plan-btn" data-id="${plan.id}" style="padding:.6rem 1.2rem;font-size:.8rem;">View Full Schedule</button>
+            </div>
+          </div>
+        `
+      }).join('')
+
+      // Fade in
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible') })
+      }, { threshold: 0.1 })
+      grid.querySelectorAll('.fade-in').forEach(el => observer.observe(el))
+
+      // Start Plan buttons
+      grid.querySelectorAll('.start-plan-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation()
+          if (!session) {
+            showToast('Sign in to start a training plan', 'error')
+            return
+          }
+          const planId = btn.dataset.id
+          btn.disabled = true
+          btn.textContent = 'Starting...'
+
+          const { error } = await supabase.from('profiles').update({
+            active_plan_id: planId,
+            plan_start_date: new Date().toISOString().split('T')[0],
+            updated_at: new Date().toISOString()
+          }).eq('id', session.user.id)
+
+          if (error) {
+            showToast('Error starting plan', 'error')
+            btn.disabled = false
+            btn.textContent = 'Start Plan'
+          } else {
+            activePlanId = planId
+            planStartDate = new Date().toISOString().split('T')[0]
+            showToast('Training plan started!', 'success')
+            renderPlans()
+          }
+        })
+      })
+
+      // View Plan buttons
+      grid.querySelectorAll('.view-plan-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation()
+          showPlanDetail(btn.dataset.id)
+        })
+      })
+    }
+
+    // Stop plan
+    document.getElementById('stopPlanBtn')?.addEventListener('click', async () => {
+      if (!session) return
+      await supabase.from('profiles').update({
+        active_plan_id: null,
+        plan_start_date: null,
+        updated_at: new Date().toISOString()
+      }).eq('id', session.user.id)
+
+      activePlanId = null
+      planStartDate = null
+      document.getElementById('activeBanner').classList.remove('show')
+      showToast('Plan stopped', 'success')
+      renderPlans()
+    })
+
+    function showPlanDetail(planId) {
+      const plan = plans.find(p => p.id === planId)
+      if (!plan) return
+
+      const schedule = plan.schedule || []
+      const body = document.getElementById('planDetailBody')
+
+      body.innerHTML = `
+        <h2>${plan.title.split(' ').slice(0, -1).join(' ')} <span class="accent">${plan.title.split(' ').slice(-1)}</span></h2>
+        <p style="color:var(--text-muted);margin-bottom:2rem;line-height:1.6;">${plan.description || ''}</p>
+        ${schedule.map((week, wi) => `
+          <div class="week-block">
+            <h3>Week ${wi + 1}${week.focus ? ` — ${week.focus}` : ''}</h3>
+            ${(week.days || []).map((d, di) => {
+              const isRest = d.toLowerCase().includes('rest') || d.toLowerCase().includes('off')
+              return `
+                <div class="day-row ${isRest ? 'rest-day' : ''}">
+                  <div class="day-row-label">${dayLabels[di] || `Day ${di+1}`}</div>
+                  <div class="day-row-content">${d}</div>
+                </div>
+              `
+            }).join('')}
+          </div>
+        `).join('')}
+      `
+
+      document.getElementById('planOverlay').classList.add('show')
+    }
+
+    document.getElementById('planDetailClose').addEventListener('click', () => {
+      document.getElementById('planOverlay').classList.remove('show')
+    })
+    document.getElementById('planOverlay').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) {
+        document.getElementById('planOverlay').classList.remove('show')
+      }
+    })
+  </script>
+</body>
+</html>

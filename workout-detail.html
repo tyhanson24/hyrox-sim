@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workout — HYROX SIM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/global.css">
+  <style>
+    .detail-page {
+      min-height: 100vh; padding: 6rem 2rem 4rem;
+      background: radial-gradient(ellipse at 50% 0%, rgba(200,255,0,.04) 0%, transparent 60%), var(--dark);
+    }
+    .detail-container { max-width: 800px; margin: 0 auto; }
+
+    .detail-back {
+      display: inline-block; color: var(--text-muted); text-decoration: none;
+      font-size: .85rem; margin-bottom: 2rem; transition: color .3s;
+    }
+    .detail-back:hover { color: var(--neon); }
+
+    .detail-header { margin-bottom: 2.5rem; }
+    .detail-header h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      color: #fff; letter-spacing: 2px; line-height: 1.1;
+    }
+    .detail-meta {
+      display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem;
+      align-items: center;
+    }
+    .detail-meta .badge { font-size: .7rem; }
+    .detail-desc {
+      color: var(--text-muted); line-height: 1.7; margin-top: 1rem;
+      font-size: .95rem;
+    }
+
+    .detail-section {
+      background: var(--card); border: 1px solid var(--card-border);
+      padding: 2rem; margin-bottom: 1.5rem;
+    }
+    .detail-section h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.5rem; color: #fff; letter-spacing: 2px;
+      margin-bottom: 1.5rem;
+    }
+    .detail-section h2 .accent { color: var(--neon); }
+
+    .exercise-list { list-style: none; }
+    .exercise-item {
+      display: flex; align-items: flex-start; gap: 1rem;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .exercise-item:last-child { border-bottom: none; }
+    .exercise-num {
+      width: 36px; height: 36px; flex-shrink: 0;
+      background: rgba(200,255,0,.1);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem; color: var(--neon);
+    }
+    .exercise-info h4 { color: #fff; font-size: .95rem; }
+    .exercise-info p { color: var(--text-muted); font-size: .85rem; margin-top: .2rem; }
+    .exercise-info .ex-detail {
+      display: flex; gap: .8rem; margin-top: .4rem; flex-wrap: wrap;
+    }
+    .exercise-info .ex-detail span {
+      font-size: .7rem; text-transform: uppercase; letter-spacing: 1px;
+      color: var(--neon); background: rgba(200,255,0,.08);
+      padding: .15rem .5rem;
+    }
+
+    .equipment-list {
+      display: flex; gap: .5rem; flex-wrap: wrap;
+    }
+    .equip-tag {
+      background: rgba(255,255,255,.05); border: 1px solid var(--card-border);
+      padding: .4rem .8rem; font-size: .8rem; color: var(--text);
+    }
+
+    .log-section {
+      text-align: center; padding: 2rem 0;
+    }
+    .log-section p {
+      color: var(--text-muted); font-size: .85rem; margin-top: .8rem;
+    }
+
+    @media (max-width: 768px) {
+      .detail-page { padding: 5rem 1rem 3rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="logo">HYROX<span>SIM</span></a>
+    <ul class="nav-links">
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="workouts.html" class="active">Workouts</a></li>
+      <li><a href="index.html#timer">Sim Timer</a></li>
+      <li><a href="pace-calculator.html">PaceMe</a></li>
+    </ul>
+    <div class="nav-right">
+      <a href="login.html" class="nav-cta">Sign In</a>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+  <div class="mobile-menu" id="mobileMenu">
+    <button class="mobile-close" id="mobileClose" aria-label="Close menu">&times;</button>
+    <a href="dashboard.html" class="mobile-nav-link">Dashboard</a>
+    <a href="workouts.html" class="mobile-nav-link">Workouts</a>
+    <a href="index.html#timer" class="mobile-nav-link">Sim Timer</a>
+    <a href="pace-calculator.html" class="mobile-nav-link">PaceMe</a>
+    <a href="race-history.html" class="mobile-nav-link">Races</a>
+    <a href="profile.html" class="mobile-nav-link">Profile</a>
+  </div>
+
+  <div class="detail-page">
+    <div class="detail-container">
+      <a href="workouts.html" class="detail-back">&larr; Back to Workouts</a>
+
+      <div id="workoutContent">
+        <div class="dash-loading" style="text-align:center;padding:4rem;color:var(--text-muted);">Loading workout...</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <a href="index.html" class="logo">HYROX<span>SIM</span></a>
+    <p>&copy; 2025 HyroxSim. Train hard. Race harder.</p>
+  </footer>
+
+  <script type="module">
+    import { initPage, showToast, formatTimeSec } from './js/shared.js'
+    import { supabase } from './js/supabase-client.js'
+
+    initPage()
+
+    const params = new URLSearchParams(window.location.search)
+    const workoutId = params.get('id')
+    const container = document.getElementById('workoutContent')
+
+    if (!workoutId) {
+      container.innerHTML = `<div class="empty-state"><h3>Workout Not Found</h3><p>No workout ID provided.</p><a href="workouts.html" class="btn-primary" style="margin-top:1rem;">Browse Workouts</a></div>`
+    } else {
+      const { data: workout, error } = await supabase
+        .from('workouts')
+        .select('*')
+        .eq('id', workoutId)
+        .single()
+
+      if (error || !workout) {
+        container.innerHTML = `<div class="empty-state"><h3>Workout Not Found</h3><p>This workout doesn't exist or has been removed.</p><a href="workouts.html" class="btn-primary" style="margin-top:1rem;">Browse Workouts</a></div>`
+      } else {
+        document.title = `${workout.title} — HYROX SIM`
+        const catClass = `cat-${workout.category}`
+        const catLabel = workout.category?.replace('_', ' ')?.replace(/\b\w/g, c => c.toUpperCase()) || ''
+        const diffClass = `diff-${workout.difficulty}`
+        const diffLabel = workout.difficulty?.replace(/\b\w/g, c => c.toUpperCase()) || ''
+        const stations = workout.stations || []
+
+        let html = `
+          <div class="detail-header fade-in">
+            <h1>${workout.title}</h1>
+            <div class="detail-meta">
+              <span class="badge ${catClass}">${catLabel}</span>
+              <span class="badge ${diffClass}" style="padding:.25rem .6rem;font-size:.7rem;text-transform:uppercase;letter-spacing:1px;font-weight:600;${workout.difficulty === 'beginner' ? 'background:rgba(0,200,83,.1);color:var(--success)' : workout.difficulty === 'intermediate' ? 'background:rgba(255,165,0,.1);color:#ffa500' : 'background:rgba(255,60,0,.1);color:var(--accent)'}">${diffLabel}</span>
+              ${workout.duration_minutes ? `<span class="badge badge-muted">${workout.duration_minutes} min</span>` : ''}
+            </div>
+            ${workout.description ? `<p class="detail-desc">${workout.description}</p>` : ''}
+          </div>
+        `
+
+        // Exercise List
+        if (stations.length > 0) {
+          html += `
+            <div class="detail-section fade-in">
+              <h2>Exercises <span class="accent">(${stations.length})</span></h2>
+              <ul class="exercise-list">
+                ${stations.map((s, i) => `
+                  <li class="exercise-item">
+                    <div class="exercise-num">${i + 1}</div>
+                    <div class="exercise-info">
+                      <h4>${s.name}</h4>
+                      ${s.notes ? `<p>${s.notes}</p>` : ''}
+                      <div class="ex-detail">
+                        ${s.reps ? `<span>${s.reps}</span>` : ''}
+                        ${s.duration ? `<span>${s.duration}</span>` : ''}
+                        ${s.distance ? `<span>${s.distance}</span>` : ''}
+                        ${s.rest ? `<span>Rest: ${s.rest}</span>` : ''}
+                      </div>
+                    </div>
+                  </li>
+                `).join('')}
+              </ul>
+            </div>
+          `
+        }
+
+        // Equipment
+        if (workout.equipment?.length > 0) {
+          html += `
+            <div class="detail-section fade-in">
+              <h2>Equipment <span class="accent">Needed</span></h2>
+              <div class="equipment-list">
+                ${workout.equipment.map(e => `<span class="equip-tag">${e}</span>`).join('')}
+              </div>
+            </div>
+          `
+        }
+
+        // Log Completed
+        html += `
+          <div class="log-section fade-in">
+            <button class="btn-primary" id="logBtn">Log Completed</button>
+            <p id="logStatus"></p>
+          </div>
+        `
+
+        container.innerHTML = html
+
+        // Re-init fade
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible') })
+        }, { threshold: 0.1 })
+        container.querySelectorAll('.fade-in').forEach(el => observer.observe(el))
+
+        // Log button
+        document.getElementById('logBtn').addEventListener('click', async () => {
+          const { data: { session } } = await supabase.auth.getSession()
+          if (!session) {
+            document.getElementById('logStatus').innerHTML = '<a href="login.html" style="color:var(--neon);">Sign in</a> to log workouts'
+            return
+          }
+
+          const btn = document.getElementById('logBtn')
+          btn.disabled = true
+          btn.textContent = 'Logging...'
+
+          const { error } = await supabase.from('workout_logs').insert({
+            user_id: session.user.id,
+            workout_id: workoutId,
+            duration_seconds: workout.duration_minutes ? workout.duration_minutes * 60 : null,
+            source: 'web'
+          })
+
+          if (error) {
+            showToast('Error logging workout', 'error')
+            btn.disabled = false
+            btn.textContent = 'Log Completed'
+          } else {
+            btn.textContent = 'Logged!'
+            showToast('Workout logged!', 'success')
+            document.getElementById('logStatus').innerHTML = 'Workout added to your history. <a href="dashboard.html" style="color:var(--neon);">View Dashboard</a>'
+          }
+        })
+      }
+    }
+  </script>
+</body>
+</html>

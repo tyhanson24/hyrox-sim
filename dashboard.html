@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — HYROX SIM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/global.css">
+  <style>
+    .dash-page {
+      min-height: 100vh; padding: 6rem 2rem 4rem;
+      background: radial-gradient(ellipse at 50% 0%, rgba(200,255,0,.04) 0%, transparent 60%), var(--dark);
+    }
+    .dash-container { max-width: 1100px; margin: 0 auto; }
+
+    /* Welcome */
+    .dash-welcome {
+      margin-bottom: 2.5rem;
+    }
+    .dash-welcome h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      color: #fff; letter-spacing: 2px;
+    }
+    .dash-welcome h1 .accent { color: var(--neon); }
+    .dash-welcome p {
+      color: var(--text-muted); margin-top: .3rem; font-size: .95rem;
+    }
+
+    /* Stats Row */
+    .dash-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem; margin-bottom: 2.5rem;
+    }
+    .dash-stat-card {
+      background: var(--card); border: 1px solid var(--card-border);
+      padding: 1.5rem; text-align: center;
+    }
+    .dash-stat-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.5rem; color: var(--neon); line-height: 1;
+    }
+    .dash-stat-label {
+      font-size: .75rem; text-transform: uppercase; letter-spacing: 2px;
+      color: var(--text-muted); margin-top: .4rem;
+    }
+
+    /* Quick Actions */
+    .dash-actions {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem; margin-bottom: 3rem;
+    }
+    .dash-action {
+      background: var(--card); border: 1px solid var(--card-border);
+      padding: 1.8rem; text-decoration: none;
+      display: flex; flex-direction: column; align-items: center;
+      text-align: center; transition: border-color .3s, transform .3s;
+    }
+    .dash-action:hover { border-color: var(--neon); transform: translateY(-3px); }
+    .dash-action-icon { font-size: 2.2rem; margin-bottom: .8rem; }
+    .dash-action h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.3rem; color: #fff; letter-spacing: 1px;
+    }
+    .dash-action p { color: var(--text-muted); font-size: .8rem; margin-top: .4rem; line-height: 1.5; }
+
+    /* Recent Activity */
+    .dash-section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem; color: #fff; letter-spacing: 2px;
+      margin-bottom: 1.5rem;
+    }
+    .dash-section-title .accent { color: var(--neon); }
+
+    .activity-list { display: flex; flex-direction: column; gap: .5rem; margin-bottom: 3rem; }
+    .activity-item {
+      display: flex; align-items: center; gap: 1rem;
+      background: var(--card); border: 1px solid var(--card-border);
+      padding: 1rem 1.5rem; transition: border-color .3s;
+    }
+    .activity-item:hover { border-color: #333; }
+    .activity-icon {
+      width: 40px; height: 40px; flex-shrink: 0;
+      background: rgba(200,255,0,.1);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+    }
+    .activity-info { flex: 1; }
+    .activity-info h4 { color: #fff; font-size: .95rem; font-weight: 600; }
+    .activity-info p { color: var(--text-muted); font-size: .8rem; margin-top: .2rem; }
+    .activity-time {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.2rem; color: var(--neon); white-space: nowrap;
+    }
+    .activity-date { color: var(--text-muted); font-size: .75rem; white-space: nowrap; text-align: right; }
+
+    /* Best Splits */
+    .best-splits { margin-bottom: 3rem; }
+    .splits-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: .5rem;
+    }
+    .split-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: .8rem 1.2rem;
+      background: var(--card); border: 1px solid var(--card-border);
+    }
+    .split-name { color: #fff; font-size: .85rem; font-weight: 500; }
+    .split-time {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem; color: var(--neon);
+    }
+
+    /* Loading */
+    .dash-loading {
+      text-align: center; padding: 4rem; color: var(--text-muted);
+    }
+
+    @media (max-width: 768px) {
+      .dash-page { padding: 5rem 1rem 3rem; }
+      .dash-stats { grid-template-columns: repeat(2, 1fr); }
+      .dash-actions { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 480px) {
+      .dash-actions { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="logo">HYROX<span>SIM</span></a>
+    <ul class="nav-links">
+      <li><a href="dashboard.html" class="active">Dashboard</a></li>
+      <li><a href="workouts.html">Workouts</a></li>
+      <li><a href="index.html#timer">Sim Timer</a></li>
+      <li><a href="pace-calculator.html">PaceMe</a></li>
+      <li><a href="race-history.html">Races</a></li>
+    </ul>
+    <div class="nav-right">
+      <a href="login.html" class="nav-cta">Sign In</a>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+  <div class="mobile-menu" id="mobileMenu">
+    <button class="mobile-close" id="mobileClose" aria-label="Close menu">&times;</button>
+    <a href="dashboard.html" class="mobile-nav-link">Dashboard</a>
+    <a href="workouts.html" class="mobile-nav-link">Workouts</a>
+    <a href="index.html#timer" class="mobile-nav-link">Sim Timer</a>
+    <a href="pace-calculator.html" class="mobile-nav-link">PaceMe</a>
+    <a href="race-history.html" class="mobile-nav-link">Races</a>
+    <a href="training-plans.html" class="mobile-nav-link">Training Plans</a>
+    <a href="profile.html" class="mobile-nav-link">Profile</a>
+  </div>
+
+  <div class="dash-page">
+    <div class="dash-container">
+
+      <!-- Welcome -->
+      <div class="dash-welcome fade-in">
+        <h1>Welcome back, <span class="accent" id="userName">Athlete</span></h1>
+        <p id="dashSubtitle">Here's your training overview.</p>
+      </div>
+
+      <!-- Stats -->
+      <div class="dash-stats fade-in">
+        <div class="dash-stat-card">
+          <div class="dash-stat-value" id="statWorkouts">0</div>
+          <div class="dash-stat-label">Total Workouts</div>
+        </div>
+        <div class="dash-stat-card">
+          <div class="dash-stat-value" id="statSims">0</div>
+          <div class="dash-stat-label">Simulations</div>
+        </div>
+        <div class="dash-stat-card">
+          <div class="dash-stat-value" id="statBestTime">—</div>
+          <div class="dash-stat-label">Best Sim Time</div>
+        </div>
+        <div class="dash-stat-card">
+          <div class="dash-stat-value" id="statStreak">0</div>
+          <div class="dash-stat-label">Day Streak</div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="dash-actions fade-in">
+        <a href="index.html#timer" class="dash-action">
+          <div class="dash-action-icon">⏱️</div>
+          <h3>Launch Sim</h3>
+          <p>Start a full simulation timer</p>
+        </a>
+        <a href="workouts.html" class="dash-action">
+          <div class="dash-action-icon">💪</div>
+          <h3>Workouts</h3>
+          <p>Browse training library</p>
+        </a>
+        <a href="race-history.html" class="dash-action">
+          <div class="dash-action-icon">🏁</div>
+          <h3>Log Race</h3>
+          <p>Record official race results</p>
+        </a>
+        <a href="pace-calculator.html" class="dash-action">
+          <div class="dash-action-icon">📊</div>
+          <h3>PaceMe</h3>
+          <p>Calculate race pacing plan</p>
+        </a>
+      </div>
+
+      <!-- Recent Activity -->
+      <h2 class="dash-section-title fade-in">Recent <span class="accent">Activity</span></h2>
+      <div class="activity-list" id="activityList">
+        <div class="dash-loading">Loading activity...</div>
+      </div>
+
+      <!-- Best Splits (from best sim) -->
+      <div class="best-splits fade-in" id="bestSplitsSection" style="display:none;">
+        <h2 class="dash-section-title">Personal <span class="accent">Best Splits</span></h2>
+        <div class="splits-grid" id="bestSplitsGrid"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    <a href="index.html" class="logo">HYROX<span>SIM</span></a>
+    <p>&copy; 2025 HyroxSim. Train hard. Race harder.</p>
+  </footer>
+
+  <script type="module">
+    import { initPage, requireAuth, formatTimeMs, formatTimeSec } from './js/shared.js'
+    import { supabase } from './js/supabase-client.js'
+
+    initPage()
+    const session = await requireAuth()
+    if (!session) throw new Error('Not authenticated')
+
+    const userId = session.user.id
+
+    // ── Load Profile ──
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single()
+
+    if (profile?.display_name) {
+      document.getElementById('userName').textContent = profile.display_name
+    }
+
+    // ── Load Stats ──
+    const [workoutRes, simRes] = await Promise.all([
+      supabase.from('workout_logs').select('id, completed_at', { count: 'exact' }).eq('user_id', userId),
+      supabase.from('simulation_results').select('*').eq('user_id', userId).order('total_time_ms', { ascending: true })
+    ])
+
+    const workoutCount = workoutRes.count || 0
+    const sims = simRes.data || []
+    const simCount = sims.length
+    const bestSim = sims[0] || null
+
+    document.getElementById('statWorkouts').textContent = workoutCount
+    document.getElementById('statSims').textContent = simCount
+
+    if (bestSim) {
+      const ms = bestSim.total_time_ms
+      const mins = Math.floor(ms / 60000)
+      const secs = Math.floor((ms % 60000) / 1000)
+      document.getElementById('statBestTime').textContent = `${mins}:${String(secs).padStart(2, '0')}`
+    }
+
+    // ── Calculate Streak ──
+    const { data: allLogs } = await supabase
+      .from('workout_logs')
+      .select('completed_at')
+      .eq('user_id', userId)
+      .order('completed_at', { ascending: false })
+
+    const { data: allSims } = await supabase
+      .from('simulation_results')
+      .select('completed_at')
+      .eq('user_id', userId)
+      .order('completed_at', { ascending: false })
+
+    // Merge and deduplicate dates
+    const allDates = new Set()
+    ;[...(allLogs || []), ...(allSims || [])].forEach(row => {
+      if (row.completed_at) {
+        allDates.add(new Date(row.completed_at).toISOString().split('T')[0])
+      }
+    })
+    const sortedDates = [...allDates].sort().reverse()
+    let streak = 0
+    const today = new Date()
+    for (let i = 0; i < sortedDates.length; i++) {
+      const expected = new Date(today)
+      expected.setDate(today.getDate() - i)
+      const expectedStr = expected.toISOString().split('T')[0]
+      if (sortedDates[i] === expectedStr) {
+        streak++
+      } else {
+        break
+      }
+    }
+    document.getElementById('statStreak').textContent = streak
+
+    // ── Recent Activity ──
+    const activityEl = document.getElementById('activityList')
+    const activities = []
+
+    // Add workout logs
+    const { data: recentWorkouts } = await supabase
+      .from('workout_logs')
+      .select('*, workouts(title)')
+      .eq('user_id', userId)
+      .order('completed_at', { ascending: false })
+      .limit(5)
+
+    ;(recentWorkouts || []).forEach(w => {
+      activities.push({
+        type: 'workout',
+        icon: '💪',
+        title: w.workouts?.title || 'Workout',
+        subtitle: w.duration_seconds ? `${Math.floor(w.duration_seconds / 60)} min` : 'Completed',
+        time: null,
+        date: w.completed_at
+      })
+    })
+
+    // Add simulation results
+    const { data: recentSims } = await supabase
+      .from('simulation_results')
+      .select('*')
+      .eq('user_id', userId)
+      .order('completed_at', { ascending: false })
+      .limit(5)
+
+    ;(recentSims || []).forEach(s => {
+      activities.push({
+        type: 'sim',
+        icon: '⏱️',
+        title: 'Full Simulation',
+        subtitle: '16 stations completed',
+        time: formatTimeMs(s.total_time_ms),
+        date: s.completed_at
+      })
+    })
+
+    // Add race results
+    const { data: recentRaces } = await supabase
+      .from('race_results')
+      .select('*')
+      .eq('user_id', userId)
+      .order('race_date', { ascending: false })
+      .limit(3)
+
+    ;(recentRaces || []).forEach(r => {
+      activities.push({
+        type: 'race',
+        icon: '🏁',
+        title: r.race_name,
+        subtitle: r.location || r.division || '',
+        time: formatTimeSec(r.overall_time_seconds),
+        date: r.race_date
+      })
+    })
+
+    // Sort by date desc
+    activities.sort((a, b) => new Date(b.date) - new Date(a.date))
+
+    if (activities.length === 0) {
+      activityEl.innerHTML = `
+        <div class="empty-state">
+          <h3>No Activity Yet</h3>
+          <p>Complete a simulation or workout to see your activity here.</p>
+          <a href="index.html#timer" class="btn-primary" style="margin-top:1.5rem;">Launch Your First Sim</a>
+        </div>
+      `
+    } else {
+      activityEl.innerHTML = activities.slice(0, 8).map(a => {
+        const d = new Date(a.date)
+        const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        return `
+          <div class="activity-item">
+            <div class="activity-icon">${a.icon}</div>
+            <div class="activity-info">
+              <h4>${a.title}</h4>
+              <p>${a.subtitle}</p>
+            </div>
+            ${a.time ? `<div class="activity-time">${a.time}</div>` : ''}
+            <div class="activity-date">${dateStr}</div>
+          </div>
+        `
+      }).join('')
+    }
+
+    // ── Best Splits ──
+    if (bestSim && bestSim.splits && bestSim.splits.length > 0) {
+      const section = document.getElementById('bestSplitsSection')
+      const grid = document.getElementById('bestSplitsGrid')
+      section.style.display = 'block'
+      grid.innerHTML = bestSim.splits.map(s => {
+        const splitMs = s.split_ms || s.cumulative_ms
+        return `
+          <div class="split-item">
+            <span class="split-name">${s.station}</span>
+            <span class="split-time">${formatTimeMs(splitMs)}</span>
+          </div>
+        `
+      }).join('')
+    }
+  </script>
+</body>
+</html>

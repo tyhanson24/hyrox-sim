@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile — HYROX SIM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/global.css">
+  <style>
+    .profile-page {
+      min-height: 100vh; padding: 6rem 2rem 4rem;
+      background: radial-gradient(ellipse at 50% 0%, rgba(200,255,0,.04) 0%, transparent 60%), var(--dark);
+    }
+    .profile-container { max-width: 640px; margin: 0 auto; }
+
+    .profile-header {
+      text-align: center; margin-bottom: 3rem;
+    }
+    .profile-avatar {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: var(--neon); color: #000;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.5rem; margin: 0 auto 1rem;
+    }
+    .profile-header h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.5rem; color: #fff; letter-spacing: 2px;
+    }
+    .profile-header h1 .accent { color: var(--neon); }
+    .profile-header p { color: var(--text-muted); font-size: .9rem; }
+
+    .profile-section {
+      background: var(--card); border: 1px solid var(--card-border);
+      padding: 2rem; margin-bottom: 1.5rem;
+    }
+    .profile-section h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.5rem; color: #fff; letter-spacing: 2px;
+      margin-bottom: 1.5rem;
+    }
+    .profile-section h2 .accent { color: var(--neon); }
+
+    .profile-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+    }
+
+    .profile-actions {
+      display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap;
+    }
+    .btn-danger {
+      background: transparent; color: var(--accent);
+      border: 1px solid rgba(255,60,0,.3); padding: .7rem 1.5rem;
+      font-size: .8rem; text-transform: uppercase; letter-spacing: 1px;
+      cursor: pointer; font-family: 'Inter', sans-serif;
+      transition: all .3s;
+    }
+    .btn-danger:hover { background: rgba(255,60,0,.1); border-color: var(--accent); }
+
+    .target-time-group {
+      display: flex; align-items: center; gap: .5rem;
+    }
+    .target-time-group input {
+      width: 70px; text-align: center;
+    }
+    .target-time-group span {
+      color: var(--text-muted); font-size: .85rem;
+    }
+
+    .profile-save-status {
+      color: var(--success); font-size: .85rem; margin-top: .5rem;
+      display: none;
+    }
+    .profile-save-status.show { display: block; }
+
+    @media (max-width: 768px) {
+      .profile-page { padding: 5rem 1rem 3rem; }
+      .profile-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="logo">HYROX<span>SIM</span></a>
+    <ul class="nav-links">
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="workouts.html">Workouts</a></li>
+      <li><a href="index.html#timer">Sim Timer</a></li>
+      <li><a href="profile.html" class="active">Profile</a></li>
+    </ul>
+    <div class="nav-right">
+      <a href="login.html" class="nav-cta">Sign In</a>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+  <div class="mobile-menu" id="mobileMenu">
+    <button class="mobile-close" id="mobileClose" aria-label="Close menu">&times;</button>
+    <a href="dashboard.html" class="mobile-nav-link">Dashboard</a>
+    <a href="workouts.html" class="mobile-nav-link">Workouts</a>
+    <a href="index.html#timer" class="mobile-nav-link">Sim Timer</a>
+    <a href="pace-calculator.html" class="mobile-nav-link">PaceMe</a>
+    <a href="race-history.html" class="mobile-nav-link">Races</a>
+    <a href="training-plans.html" class="mobile-nav-link">Training Plans</a>
+    <a href="profile.html" class="mobile-nav-link">Profile</a>
+  </div>
+
+  <div class="profile-page">
+    <div class="profile-container">
+
+      <div class="profile-header fade-in">
+        <div class="profile-avatar" id="profileAvatar">?</div>
+        <h1>YOUR <span class="accent">PROFILE</span></h1>
+        <p id="profileEmail">Loading...</p>
+      </div>
+
+      <!-- Personal Info -->
+      <div class="profile-section fade-in">
+        <h2>Personal <span class="accent">Info</span></h2>
+        <form id="profileForm">
+          <div class="profile-row">
+            <div class="form-group">
+              <label>Display Name</label>
+              <input type="text" class="form-input" id="displayName" placeholder="Your name">
+            </div>
+            <div class="form-group">
+              <label>Division</label>
+              <select class="form-input" id="division">
+                <option value="">Select Division</option>
+                <option value="men_open">Men Open</option>
+                <option value="women_open">Women Open</option>
+                <option value="men_pro">Men Pro</option>
+                <option value="women_pro">Women Pro</option>
+                <option value="men_doubles">Men Doubles</option>
+                <option value="women_doubles">Women Doubles</option>
+                <option value="mixed_doubles">Mixed Doubles</option>
+              </select>
+            </div>
+          </div>
+          <div class="profile-row">
+            <div class="form-group">
+              <label>Age Group</label>
+              <select class="form-input" id="ageGroup">
+                <option value="">Select Age Group</option>
+                <option value="16-24">16–24</option>
+                <option value="25-29">25–29</option>
+                <option value="30-34">30–34</option>
+                <option value="35-39">35–39</option>
+                <option value="40-44">40–44</option>
+                <option value="45-49">45–49</option>
+                <option value="50-54">50–54</option>
+                <option value="55-59">55–59</option>
+                <option value="60+">60+</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Target Race Time</label>
+              <div class="target-time-group">
+                <input type="number" class="form-input" id="targetHours" min="0" max="4" placeholder="H">
+                <span>:</span>
+                <input type="number" class="form-input" id="targetMins" min="0" max="59" placeholder="MM">
+                <span>:</span>
+                <input type="number" class="form-input" id="targetSecs" min="0" max="59" placeholder="SS">
+              </div>
+            </div>
+          </div>
+          <div class="profile-actions">
+            <button type="submit" class="btn-primary" id="saveProfile">Save Changes</button>
+          </div>
+          <p class="profile-save-status" id="saveStatus">Profile updated!</p>
+        </form>
+      </div>
+
+      <!-- Change Password -->
+      <div class="profile-section fade-in">
+        <h2>Change <span class="accent">Password</span></h2>
+        <form id="passwordForm">
+          <div class="form-group">
+            <label>New Password <span class="required">*</span></label>
+            <input type="password" class="form-input" id="newPassword" placeholder="Minimum 8 characters" minlength="8" required>
+          </div>
+          <div class="form-group">
+            <label>Confirm New Password <span class="required">*</span></label>
+            <input type="password" class="form-input" id="confirmPassword" placeholder="Re-enter password" required>
+          </div>
+          <div class="profile-actions">
+            <button type="submit" class="btn-primary" id="changePassBtn">Update Password</button>
+          </div>
+          <p class="profile-save-status" id="passStatus"></p>
+        </form>
+      </div>
+
+      <!-- Account -->
+      <div class="profile-section fade-in">
+        <h2>Account</h2>
+        <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:1.5rem;">
+          Signed in as <strong id="accountEmail" style="color:#fff;"></strong>
+        </p>
+        <div class="profile-actions">
+          <button class="btn-secondary" id="logoutBtn" style="padding:.7rem 1.5rem;font-size:.8rem;">Log Out</button>
+          <a href="dashboard.html" class="btn-secondary" style="padding:.7rem 1.5rem;font-size:.8rem;">&larr; Back to Dashboard</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    <a href="index.html" class="logo">HYROX<span>SIM</span></a>
+    <p>&copy; 2025 HyroxSim. Train hard. Race harder.</p>
+  </footer>
+
+  <script type="module">
+    import { initPage, requireAuth, showToast } from './js/shared.js'
+    import { supabase } from './js/supabase-client.js'
+    import { signOut } from './js/auth.js'
+
+    initPage()
+    const session = await requireAuth()
+    if (!session) throw new Error('Not authenticated')
+
+    const userId = session.user.id
+    const email = session.user.email
+
+    document.getElementById('profileEmail').textContent = email
+    document.getElementById('accountEmail').textContent = email
+
+    // ── Load Profile ──
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single()
+
+    if (profile) {
+      const name = profile.display_name || ''
+      document.getElementById('displayName').value = name
+      document.getElementById('division').value = profile.division || ''
+      document.getElementById('ageGroup').value = profile.age_group || ''
+      document.getElementById('profileAvatar').textContent = name ? name[0].toUpperCase() : '?'
+
+      if (profile.target_time_seconds) {
+        const t = profile.target_time_seconds
+        document.getElementById('targetHours').value = Math.floor(t / 3600)
+        document.getElementById('targetMins').value = Math.floor((t % 3600) / 60)
+        document.getElementById('targetSecs').value = t % 60
+      }
+    }
+
+    // ── Save Profile ──
+    document.getElementById('profileForm').addEventListener('submit', async (e) => {
+      e.preventDefault()
+      const btn = document.getElementById('saveProfile')
+      btn.disabled = true
+      btn.textContent = 'Saving...'
+
+      const hours = parseInt(document.getElementById('targetHours').value) || 0
+      const mins = parseInt(document.getElementById('targetMins').value) || 0
+      const secs = parseInt(document.getElementById('targetSecs').value) || 0
+      const targetSeconds = hours * 3600 + mins * 60 + secs
+
+      const updates = {
+        display_name: document.getElementById('displayName').value.trim(),
+        division: document.getElementById('division').value || null,
+        age_group: document.getElementById('ageGroup').value || null,
+        target_time_seconds: targetSeconds > 0 ? targetSeconds : null,
+        updated_at: new Date().toISOString()
+      }
+
+      const { error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', userId)
+
+      if (error) {
+        showToast('Error saving profile. Please try again.', 'error')
+      } else {
+        showToast('Profile updated!', 'success')
+        const statusEl = document.getElementById('saveStatus')
+        statusEl.textContent = 'Profile updated!'
+        statusEl.style.color = 'var(--success)'
+        statusEl.classList.add('show')
+        setTimeout(() => statusEl.classList.remove('show'), 3000)
+
+        // Update avatar
+        if (updates.display_name) {
+          document.getElementById('profileAvatar').textContent = updates.display_name[0].toUpperCase()
+        }
+      }
+
+      btn.disabled = false
+      btn.textContent = 'Save Changes'
+    })
+
+    // ── Change Password ──
+    document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+      e.preventDefault()
+      const newPass = document.getElementById('newPassword').value
+      const confirmPass = document.getElementById('confirmPassword').value
+      const statusEl = document.getElementById('passStatus')
+      const btn = document.getElementById('changePassBtn')
+
+      if (newPass !== confirmPass) {
+        statusEl.textContent = 'Passwords do not match.'
+        statusEl.style.color = 'var(--accent)'
+        statusEl.classList.add('show')
+        return
+      }
+
+      if (newPass.length < 8) {
+        statusEl.textContent = 'Password must be at least 8 characters.'
+        statusEl.style.color = 'var(--accent)'
+        statusEl.classList.add('show')
+        return
+      }
+
+      btn.disabled = true
+      btn.textContent = 'Updating...'
+
+      const { error } = await supabase.auth.updateUser({ password: newPass })
+
+      if (error) {
+        statusEl.textContent = error.message
+        statusEl.style.color = 'var(--accent)'
+      } else {
+        statusEl.textContent = 'Password updated successfully!'
+        statusEl.style.color = 'var(--success)'
+        document.getElementById('newPassword').value = ''
+        document.getElementById('confirmPassword').value = ''
+        showToast('Password updated!', 'success')
+      }
+
+      statusEl.classList.add('show')
+      btn.disabled = false
+      btn.textContent = 'Update Password'
+      setTimeout(() => statusEl.classList.remove('show'), 5000)
+    })
+
+    // ── Logout ──
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await signOut()
+      window.location.href = 'index.html'
+    })
+  </script>
+</body>
+</html>

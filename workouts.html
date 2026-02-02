@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workouts — HYROX SIM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/global.css">
+  <style>
+    .workouts-page {
+      min-height: 100vh; padding: 6rem 2rem 4rem;
+      background: radial-gradient(ellipse at 50% 0%, rgba(200,255,0,.04) 0%, transparent 60%), var(--dark);
+    }
+    .workouts-container { max-width: 1100px; margin: 0 auto; }
+
+    .workouts-hero {
+      text-align: center; margin-bottom: 3rem;
+    }
+    .workouts-hero h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      color: #fff; letter-spacing: 2px;
+    }
+    .workouts-hero h1 .accent { color: var(--neon); }
+    .workouts-hero p {
+      color: var(--text-muted); margin-top: .5rem;
+      max-width: 500px; margin-inline: auto; line-height: 1.6;
+    }
+
+    /* Filters */
+    .filters {
+      display: flex; gap: .75rem; flex-wrap: wrap;
+      justify-content: center; margin-bottom: 2.5rem;
+    }
+    .filter-btn {
+      background: var(--card); border: 1px solid var(--card-border);
+      color: var(--text-muted); padding: .5rem 1.2rem;
+      font-size: .8rem; text-transform: uppercase; letter-spacing: 1px;
+      cursor: pointer; transition: all .3s;
+      font-family: 'Inter', sans-serif; font-weight: 600;
+    }
+    .filter-btn:hover { border-color: #444; color: #fff; }
+    .filter-btn.active { border-color: var(--neon); color: var(--neon); background: rgba(200,255,0,.05); }
+
+    /* Workout Grid */
+    .workout-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+    .w-card {
+      background: var(--card); border: 1px solid var(--card-border);
+      padding: 1.8rem; position: relative; overflow: hidden;
+      transition: border-color .3s, transform .3s;
+      text-decoration: none; display: block;
+    }
+    .w-card:hover { border-color: var(--neon); transform: translateY(-3px); }
+    .w-card::after {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: var(--neon); transform: scaleX(0);
+      transform-origin: left; transition: transform .4s;
+    }
+    .w-card:hover::after { transform: scaleX(1); }
+
+    .w-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: .8rem; }
+    .w-card h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem; color: #fff; letter-spacing: 1px;
+    }
+    .w-card-cat {
+      font-size: .65rem; text-transform: uppercase; letter-spacing: 1px;
+      padding: .2rem .6rem; font-weight: 700;
+    }
+    .cat-hyrox_sim { background: rgba(200,255,0,.1); color: var(--neon); }
+    .cat-conditioning { background: rgba(255,60,0,.1); color: var(--accent); }
+    .cat-strength { background: rgba(100,149,237,.15); color: #6495ed; }
+    .cat-running { background: rgba(0,200,83,.1); color: var(--success); }
+    .cat-mobility { background: rgba(200,180,255,.1); color: #c8b4ff; }
+
+    .w-card p { color: var(--text-muted); font-size: .85rem; line-height: 1.5; margin-bottom: 1rem; }
+    .w-card-meta {
+      display: flex; gap: .8rem; flex-wrap: wrap;
+    }
+    .w-card-meta span {
+      font-size: .7rem; text-transform: uppercase; letter-spacing: 1px;
+      color: var(--text-muted); font-weight: 600;
+    }
+    .w-card-meta span strong { color: #fff; }
+
+    .difficulty-badge {
+      display: inline-block; padding: .15rem .5rem;
+      font-size: .65rem; text-transform: uppercase; letter-spacing: 1px;
+      font-weight: 700;
+    }
+    .diff-beginner { background: rgba(0,200,83,.1); color: var(--success); }
+    .diff-intermediate { background: rgba(255,165,0,.1); color: #ffa500; }
+    .diff-advanced { background: rgba(255,60,0,.1); color: var(--accent); }
+
+    .no-results {
+      text-align: center; padding: 3rem; color: var(--text-muted);
+      grid-column: 1 / -1;
+    }
+
+    @media (max-width: 768px) {
+      .workouts-page { padding: 5rem 1rem 3rem; }
+      .workout-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="logo">HYROX<span>SIM</span></a>
+    <ul class="nav-links">
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="workouts.html" class="active">Workouts</a></li>
+      <li><a href="index.html#timer">Sim Timer</a></li>
+      <li><a href="pace-calculator.html">PaceMe</a></li>
+      <li><a href="race-history.html">Races</a></li>
+    </ul>
+    <div class="nav-right">
+      <a href="login.html" class="nav-cta">Sign In</a>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+  <div class="mobile-menu" id="mobileMenu">
+    <button class="mobile-close" id="mobileClose" aria-label="Close menu">&times;</button>
+    <a href="dashboard.html" class="mobile-nav-link">Dashboard</a>
+    <a href="workouts.html" class="mobile-nav-link">Workouts</a>
+    <a href="index.html#timer" class="mobile-nav-link">Sim Timer</a>
+    <a href="pace-calculator.html" class="mobile-nav-link">PaceMe</a>
+    <a href="race-history.html" class="mobile-nav-link">Races</a>
+    <a href="training-plans.html" class="mobile-nav-link">Training Plans</a>
+    <a href="profile.html" class="mobile-nav-link">Profile</a>
+  </div>
+
+  <div class="workouts-page">
+    <div class="workouts-container">
+
+      <div class="workouts-hero fade-in">
+        <h1>WORKOUT <span class="accent">LIBRARY</span></h1>
+        <p>Hyrox-specific workouts built for race day performance. Filter by type, difficulty, or duration.</p>
+      </div>
+
+      <div class="filters fade-in">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="hyrox_sim">Hyrox Sim</button>
+        <button class="filter-btn" data-filter="conditioning">Conditioning</button>
+        <button class="filter-btn" data-filter="strength">Strength</button>
+        <button class="filter-btn" data-filter="running">Running</button>
+        <button class="filter-btn" data-filter="mobility">Mobility</button>
+      </div>
+
+      <div class="workout-grid" id="workoutGrid">
+        <div class="no-results">Loading workouts...</div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    <a href="index.html" class="logo">HYROX<span>SIM</span></a>
+    <p>&copy; 2025 HyroxSim. Train hard. Race harder.</p>
+  </footer>
+
+  <script type="module">
+    import { initPage } from './js/shared.js'
+    import { supabase } from './js/supabase-client.js'
+
+    initPage()
+
+    let allWorkouts = []
+    let activeFilter = 'all'
+
+    // ── Load Workouts ──
+    const { data, error } = await supabase
+      .from('workouts')
+      .select('*')
+      .order('category')
+      .order('difficulty')
+
+    allWorkouts = data || []
+    renderWorkouts()
+
+    // ── Filter Buttons ──
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'))
+        btn.classList.add('active')
+        activeFilter = btn.dataset.filter
+        renderWorkouts()
+      })
+    })
+
+    function renderWorkouts() {
+      const grid = document.getElementById('workoutGrid')
+      const filtered = activeFilter === 'all'
+        ? allWorkouts
+        : allWorkouts.filter(w => w.category === activeFilter)
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div class="no-results">No workouts found. Run the seed SQL in Supabase to populate workouts.</div>`
+        return
+      }
+
+      grid.innerHTML = filtered.map(w => {
+        const catClass = `cat-${w.category}`
+        const catLabel = w.category?.replace('_', ' ')?.replace(/\b\w/g, c => c.toUpperCase()) || ''
+        const diffClass = `diff-${w.difficulty}`
+        const diffLabel = w.difficulty?.replace(/\b\w/g, c => c.toUpperCase()) || ''
+        const stationCount = w.stations ? w.stations.length : 0
+
+        return `
+          <a href="workout-detail.html?id=${w.id}" class="w-card fade-in">
+            <div class="w-card-header">
+              <h3>${w.title}</h3>
+              <span class="w-card-cat ${catClass}">${catLabel}</span>
+            </div>
+            <p>${w.description || ''}</p>
+            <div class="w-card-meta">
+              <span class="difficulty-badge ${diffClass}">${diffLabel}</span>
+              ${w.duration_minutes ? `<span><strong>${w.duration_minutes}</strong> min</span>` : ''}
+              ${stationCount > 0 ? `<span><strong>${stationCount}</strong> exercises</span>` : ''}
+              ${w.equipment?.length ? `<span>${w.equipment.join(', ')}</span>` : ''}
+            </div>
+          </a>
+        `
+      }).join('')
+
+      // Re-init fade-in for new cards
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible') })
+      }, { threshold: 0.1 })
+      grid.querySelectorAll('.fade-in').forEach(el => observer.observe(el))
+    }
+  </script>
+</body>
+</html>
