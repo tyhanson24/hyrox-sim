@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account — HYROX SIM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/global.css">
+  <style>
+    .auth-page {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      padding: 6rem 2rem 4rem;
+      background: radial-gradient(ellipse at 50% 0%, rgba(200,255,0,.06) 0%, transparent 60%), var(--dark);
+    }
+    .auth-card {
+      width: 100%; max-width: 420px;
+      background: var(--card); border: 1px solid var(--card-border);
+      padding: 2.5rem;
+    }
+    .auth-card h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.5rem; color: #fff; letter-spacing: 2px;
+      text-align: center; margin-bottom: .5rem;
+    }
+    .auth-card h1 .accent { color: var(--neon); }
+    .auth-subtitle {
+      text-align: center; color: var(--text-muted);
+      font-size: .9rem; margin-bottom: 2rem;
+    }
+    .auth-links {
+      text-align: center; margin-top: 1.5rem;
+      font-size: .85rem; color: var(--text-muted);
+    }
+    .auth-links a { color: var(--neon); text-decoration: none; font-weight: 600; }
+    .auth-links a:hover { text-decoration: underline; }
+    .auth-error {
+      background: rgba(255,60,0,.1); border: 1px solid rgba(255,60,0,.3);
+      color: var(--accent); padding: .8rem 1rem; font-size: .85rem;
+      margin-bottom: 1.5rem; display: none;
+    }
+    .auth-error.show { display: block; }
+    .auth-success {
+      text-align: center; padding: 2rem; display: none;
+    }
+    .auth-success.show { display: block; }
+    .auth-success .check {
+      width: 80px; height: 80px; margin: 0 auto 1.5rem;
+      border: 3px solid var(--neon); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.5rem; color: var(--neon);
+      animation: scaleIn .4s cubic-bezier(.4,0,.2,1);
+    }
+    @keyframes scaleIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .auth-success h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem; color: #fff; letter-spacing: 2px;
+    }
+    .auth-success p { color: var(--text-muted); margin-top: .8rem; line-height: 1.6; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="logo">HYROX<span>SIM</span></a>
+    <ul class="nav-links">
+      <li><a href="index.html#workouts">Workouts</a></li>
+      <li><a href="index.html#timer">Sim Timer</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+    <div class="nav-right">
+      <a href="login.html" class="nav-cta">Sign In</a>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+  <div class="mobile-menu" id="mobileMenu">
+    <button class="mobile-close" id="mobileClose" aria-label="Close menu">&times;</button>
+    <a href="index.html" class="mobile-nav-link">Home</a>
+    <a href="index.html#workouts" class="mobile-nav-link">Workouts</a>
+    <a href="login.html" class="mobile-nav-link">Sign In</a>
+    <a href="contact.html" class="mobile-nav-link">Contact</a>
+  </div>
+
+  <section class="auth-page">
+    <div class="auth-card fade-in">
+      <h1>JOIN <span class="accent">HYROX SIM</span></h1>
+      <p class="auth-subtitle">Create your account and start training.</p>
+
+      <div class="auth-error" id="authError"></div>
+
+      <form id="signupForm">
+        <div class="form-group">
+          <label>Display Name <span class="required">*</span></label>
+          <input type="text" class="form-input" id="displayName" placeholder="Your name" required>
+        </div>
+        <div class="form-group">
+          <label>Email <span class="required">*</span></label>
+          <input type="email" class="form-input" id="email" placeholder="you@example.com" required>
+        </div>
+        <div class="form-group">
+          <label>Password <span class="required">*</span></label>
+          <input type="password" class="form-input" id="password" placeholder="Min 8 characters" required minlength="8">
+        </div>
+        <div class="form-group">
+          <label>Confirm Password <span class="required">*</span></label>
+          <input type="password" class="form-input" id="confirmPassword" placeholder="Confirm your password" required>
+        </div>
+        <div class="form-group">
+          <label>Division</label>
+          <select class="form-input" id="division">
+            <option value="">Select your division</option>
+            <option value="men_open">Men Open</option>
+            <option value="women_open">Women Open</option>
+            <option value="men_pro">Men Pro</option>
+            <option value="women_pro">Women Pro</option>
+            <option value="men_doubles">Men Doubles</option>
+            <option value="women_doubles">Women Doubles</option>
+            <option value="mixed_doubles">Mixed Doubles</option>
+          </select>
+        </div>
+        <button type="submit" class="submit-btn" id="submitBtn">Create Account</button>
+      </form>
+
+      <div class="auth-success" id="authSuccess">
+        <div class="check">&#10003;</div>
+        <h2>Account Created</h2>
+        <p>Check your email for a confirmation link. Once confirmed, you can <a href="login.html" style="color:var(--neon);">sign in</a> and start training.</p>
+      </div>
+
+      <div class="auth-links" id="authLinks">
+        Already have an account? <a href="login.html">Sign in</a>
+      </div>
+    </div>
+  </section>
+
+  <script type="module">
+    import { signUp } from './js/auth.js'
+    import { initFadeIn, initHamburger } from './js/shared.js'
+
+    initFadeIn()
+    initHamburger()
+
+    const form = document.getElementById('signupForm')
+    const errorEl = document.getElementById('authError')
+    const successEl = document.getElementById('authSuccess')
+    const linksEl = document.getElementById('authLinks')
+    const btn = document.getElementById('submitBtn')
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      errorEl.classList.remove('show')
+
+      const password = document.getElementById('password').value
+      const confirmPassword = document.getElementById('confirmPassword').value
+
+      if (password !== confirmPassword) {
+        errorEl.textContent = 'Passwords do not match.'
+        errorEl.classList.add('show')
+        return
+      }
+
+      if (password.length < 8) {
+        errorEl.textContent = 'Password must be at least 8 characters.'
+        errorEl.classList.add('show')
+        return
+      }
+
+      btn.disabled = true
+      btn.textContent = 'Creating account...'
+
+      try {
+        await signUp(
+          document.getElementById('email').value,
+          password,
+          document.getElementById('displayName').value,
+          document.getElementById('division').value || null
+        )
+        form.style.display = 'none'
+        linksEl.style.display = 'none'
+        successEl.classList.add('show')
+      } catch (err) {
+        errorEl.textContent = err.message
+        errorEl.classList.add('show')
+        btn.disabled = false
+        btn.textContent = 'Create Account'
+      }
+    })
+  </script>
+</body>
+</html>
