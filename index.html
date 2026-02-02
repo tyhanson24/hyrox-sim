@@ -58,6 +58,48 @@
     }
     .nav-cta:hover { background: #fff; }
 
+    /* ── HAMBURGER ── */
+    .hamburger {
+      display: none; background: none; border: none; cursor: pointer;
+      flex-direction: column; gap: 5px; padding: .5rem; z-index: 201;
+    }
+    .hamburger span {
+      display: block; width: 26px; height: 2px; background: #fff;
+      transition: transform .3s, opacity .3s;
+    }
+    .hamburger.active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger.active span:nth-child(2) { opacity: 0; }
+    .hamburger.active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    .mobile-menu {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(10,10,10,.97);
+      backdrop-filter: blur(20px);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 2rem;
+      transform: translateX(100%);
+      transition: transform .4s cubic-bezier(.4,0,.2,1);
+    }
+    .mobile-menu.open { transform: translateX(0); }
+    .mobile-menu a {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem; color: #fff; text-decoration: none;
+      letter-spacing: 3px; transition: color .3s;
+    }
+    .mobile-menu a:hover { color: var(--neon); }
+    .mobile-menu .mobile-cta {
+      background: var(--neon); color: #000; padding: .8rem 2rem;
+      font-family: 'Inter', sans-serif; font-weight: 700; font-size: .85rem;
+      text-transform: uppercase; letter-spacing: 1.5px;
+      text-decoration: none;
+      clip-path: polygon(0 0,100% 0,96% 100%,0% 100%);
+    }
+
+    @media (max-width: 768px) {
+      .hamburger { display: flex; }
+      .nav-cta { display: none; }
+    }
+
     /* ── HERO ── */
     .hero {
       min-height: 100vh;
@@ -355,9 +397,23 @@
       <li><a href="#format">Race Format</a></li>
       <li><a href="#timer">Sim Timer</a></li>
       <li><a href="#leaderboard">Leaderboard</a></li>
+      <li><a href="contact.html">Contact</a></li>
     </ul>
     <button class="nav-cta" onclick="document.getElementById('cta').scrollIntoView({behavior:'smooth'})">Start Training</button>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
   </nav>
+
+  <!-- MOBILE MENU -->
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#workouts" class="mobile-nav-link">Workouts</a>
+    <a href="#format" class="mobile-nav-link">Race Format</a>
+    <a href="#timer" class="mobile-nav-link">Sim Timer</a>
+    <a href="#leaderboard" class="mobile-nav-link">Leaderboard</a>
+    <a href="contact.html" class="mobile-nav-link">Contact</a>
+    <a href="#cta" class="mobile-cta">Start Training</a>
+  </div>
 
   <!-- HERO -->
   <section class="hero">
@@ -696,6 +752,22 @@
       logEl.innerHTML = '';
       const btn = document.getElementById('timerStart');
       btn.textContent = 'Start'; btn.disabled = false;
+    });
+
+    // ── Hamburger Menu ──
+    const hamburger = document.getElementById('hamburger');
+    const mobileMenu = document.getElementById('mobileMenu');
+    hamburger.addEventListener('click', () => {
+      hamburger.classList.toggle('active');
+      mobileMenu.classList.toggle('open');
+      document.body.style.overflow = mobileMenu.classList.contains('open') ? 'hidden' : '';
+    });
+    document.querySelectorAll('.mobile-nav-link').forEach(link => {
+      link.addEventListener('click', () => {
+        hamburger.classList.remove('active');
+        mobileMenu.classList.remove('open');
+        document.body.style.overflow = '';
+      });
     });
   </script>
 
