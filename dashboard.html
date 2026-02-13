@@ -120,10 +120,131 @@
       text-align: center; padding: 4rem; color: var(--text-muted);
     }
 
+    /* Health Summary Card */
+    .health-summary {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      padding: 1.5rem;
+      margin-bottom: 2.5rem;
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      transition: border-color 0.3s;
+    }
+    .health-summary:hover { border-color: var(--neon); }
+    .health-summary-metrics {
+      display: flex;
+      gap: 2rem;
+      flex: 1;
+    }
+    .health-metric-item {
+      text-align: center;
+    }
+    .health-metric-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem;
+      color: var(--neon);
+    }
+    .health-metric-value .unit {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+    .health-metric-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+    }
+    .health-recovery-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .health-recovery-status.ready { background: rgba(52, 211, 153, 0.15); color: #34d399; }
+    .health-recovery-status.moderate { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+    .health-recovery-status.rest { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+    .health-recovery-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+    }
+    .health-recovery-dot.ready { background: #34d399; }
+    .health-recovery-dot.moderate { background: #fbbf24; }
+    .health-recovery-dot.rest { background: #ef4444; }
+    .health-link {
+      color: var(--neon);
+      font-size: 0.85rem;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .health-link:hover { text-decoration: underline; }
+
+    @media (max-width: 768px) {
+      .health-summary { flex-direction: column; gap: 1rem; text-align: center; }
+      .health-summary-metrics { gap: 1.5rem; }
+    }
+
+    /* Upcoming Events Widget */
+    .events-widget { margin-bottom: 3rem; }
+    .events-widget-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 1rem;
+    }
+    .events-widget-link {
+      color: var(--neon); font-size: .85rem; text-decoration: none;
+      transition: opacity .3s;
+    }
+    .events-widget-link:hover { opacity: .7; }
+    .events-scroll {
+      display: flex; gap: 1rem; overflow-x: auto;
+      padding-bottom: .5rem;
+      scrollbar-width: thin; scrollbar-color: #333 transparent;
+    }
+    .events-scroll::-webkit-scrollbar { height: 4px; }
+    .events-scroll::-webkit-scrollbar-track { background: transparent; }
+    .events-scroll::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+    .event-widget-card {
+      flex: 0 0 260px;
+      background: var(--card); border: 1px solid var(--card-border);
+      padding: 1.2rem; transition: border-color .3s, transform .3s;
+      text-decoration: none; display: block;
+    }
+    .event-widget-card:hover { border-color: var(--neon); transform: translateY(-2px); }
+    .event-widget-top {
+      display: flex; align-items: center; gap: .6rem; margin-bottom: .6rem;
+    }
+    .event-widget-flag { font-size: 1.4rem; }
+    .event-widget-info { flex: 1; }
+    .event-widget-info h4 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem; color: #fff; letter-spacing: .5px; line-height: 1.1;
+    }
+    .event-widget-info p { color: var(--text-muted); font-size: .75rem; margin-top: .15rem; }
+    .event-widget-bottom {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: .8rem; padding-top: .6rem;
+      border-top: 1px solid var(--card-border);
+    }
+    .event-widget-date {
+      font-size: .75rem; color: var(--text-muted);
+    }
+    .event-widget-countdown {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem; color: var(--neon);
+    }
+    .event-widget-map-badge {
+      display: inline-flex; align-items: center; gap: .3rem;
+      font-size: .65rem; text-transform: uppercase; letter-spacing: .5px;
+      padding: .15rem .5rem; background: rgba(200,255,0,.1); color: var(--neon);
+    }
+
     @media (max-width: 768px) {
       .dash-page { padding: 5rem 1rem 3rem; }
       .dash-stats { grid-template-columns: repeat(2, 1fr); }
       .dash-actions { grid-template-columns: 1fr 1fr; }
+      .event-widget-card { flex: 0 0 220px; }
     }
     @media (max-width: 480px) {
       .dash-actions { grid-template-columns: 1fr; }
@@ -137,9 +258,10 @@
     <ul class="nav-links">
       <li><a href="dashboard.html" class="active">Dashboard</a></li>
       <li><a href="workouts.html">Workouts</a></li>
-      <li><a href="index.html#timer">Sim Timer</a></li>
+      <li><a href="health.html">Health</a></li>
       <li><a href="pace-calculator.html">PaceMe</a></li>
       <li><a href="race-history.html">Races</a></li>
+      <li><a href="events.html">Events</a></li>
     </ul>
     <div class="nav-right">
       <a href="login.html" class="nav-cta">Sign In</a>
@@ -152,9 +274,10 @@
     <button class="mobile-close" id="mobileClose" aria-label="Close menu">&times;</button>
     <a href="dashboard.html" class="mobile-nav-link">Dashboard</a>
     <a href="workouts.html" class="mobile-nav-link">Workouts</a>
-    <a href="index.html#timer" class="mobile-nav-link">Sim Timer</a>
+    <a href="health.html" class="mobile-nav-link">Health</a>
     <a href="pace-calculator.html" class="mobile-nav-link">PaceMe</a>
     <a href="race-history.html" class="mobile-nav-link">Races</a>
+    <a href="events.html" class="mobile-nav-link">Events</a>
     <a href="training-plans.html" class="mobile-nav-link">Training Plans</a>
     <a href="profile.html" class="mobile-nav-link">Profile</a>
   </div>
@@ -166,6 +289,29 @@
       <div class="dash-welcome fade-in">
         <h1>Welcome back, <span class="accent" id="userName">Athlete</span></h1>
         <p id="dashSubtitle">Here's your training overview.</p>
+      </div>
+
+      <!-- Health Summary -->
+      <div id="healthSummary" class="health-summary fade-in" style="display: none;">
+        <div class="health-summary-metrics">
+          <div class="health-metric-item">
+            <div class="health-metric-value"><span id="healthRHR">--</span><span class="unit">bpm</span></div>
+            <div class="health-metric-label">Resting HR</div>
+          </div>
+          <div class="health-metric-item">
+            <div class="health-metric-value"><span id="healthVO2">--</span></div>
+            <div class="health-metric-label">VO2 Max</div>
+          </div>
+          <div class="health-metric-item">
+            <div class="health-metric-value"><span id="healthHRV">--</span><span class="unit">ms</span></div>
+            <div class="health-metric-label">HRV</div>
+          </div>
+        </div>
+        <div id="healthRecoveryStatus" class="health-recovery-status ready">
+          <div class="health-recovery-dot ready"></div>
+          <span>Ready</span>
+        </div>
+        <a href="health.html" class="health-link">View All Health Data →</a>
       </div>
 
       <!-- Stats -->
@@ -210,6 +356,15 @@
           <h3>PaceMe</h3>
           <p>Calculate race pacing plan</p>
         </a>
+      </div>
+
+      <!-- Upcoming Events -->
+      <div class="events-widget fade-in" id="eventsWidget" style="display: none;">
+        <div class="events-widget-header">
+          <h2 class="dash-section-title" style="margin-bottom:0;">Upcoming <span class="accent">Events</span></h2>
+          <a href="events.html" class="events-widget-link">See all events →</a>
+        </div>
+        <div class="events-scroll" id="eventsScroll"></div>
       </div>
 
       <!-- Recent Activity -->
@@ -399,6 +554,49 @@
       }).join('')
     }
 
+    // ── Health Summary ──
+    const { data: healthMetrics } = await supabase
+      .from('health_metrics')
+      .select('*')
+      .eq('user_id', userId)
+      .order('recorded_at', { ascending: false })
+      .limit(20)
+
+    if (healthMetrics && healthMetrics.length > 0) {
+      const healthSummary = document.getElementById('healthSummary')
+      healthSummary.style.display = 'flex'
+
+      // Get latest of each metric type
+      const latest = {}
+      healthMetrics.forEach(m => {
+        if (!latest[m.metric_type]) latest[m.metric_type] = m
+      })
+
+      if (latest.resting_hr) {
+        document.getElementById('healthRHR').textContent = Math.round(parseFloat(latest.resting_hr.value))
+      }
+      if (latest.vo2_max) {
+        document.getElementById('healthVO2').textContent = parseFloat(latest.vo2_max.value).toFixed(1)
+      }
+      if (latest.hrv) {
+        document.getElementById('healthHRV').textContent = Math.round(parseFloat(latest.hrv.value))
+      }
+
+      // Update recovery status
+      const hrv = latest.hrv ? parseFloat(latest.hrv.value) : null
+      const rhr = latest.resting_hr ? parseFloat(latest.resting_hr.value) : null
+
+      let status = 'moderate', statusText = 'Moderate'
+      if (hrv !== null && rhr !== null) {
+        if (hrv >= 50 && rhr <= 60) { status = 'ready'; statusText = 'Ready' }
+        else if (hrv < 30 || rhr > 70) { status = 'rest'; statusText = 'Rest Day' }
+      }
+
+      const recoveryEl = document.getElementById('healthRecoveryStatus')
+      recoveryEl.className = `health-recovery-status ${status}`
+      recoveryEl.innerHTML = `<div class="health-recovery-dot ${status}"></div><span>${statusText}</span>`
+    }
+
     // ── Best Splits ──
     if (bestSim && bestSim.splits && bestSim.splits.length > 0) {
       const section = document.getElementById('bestSplitsSection')
@@ -413,6 +611,70 @@
           </div>
         `
       }).join('')
+    }
+
+    // ── Upcoming Events Widget ──
+    const countryFlags = {
+      'USA': '🇺🇸', 'UK': '🇬🇧', 'Germany': '🇩🇪', 'Spain': '🇪🇸', 'France': '🇫🇷',
+      'Italy': '🇮🇹', 'Netherlands': '🇳🇱', 'Austria': '🇦🇹', 'Switzerland': '🇨🇭',
+      'Australia': '🇦🇺', 'Canada': '🇨🇦', 'South Korea': '🇰🇷', 'Japan': '🇯🇵',
+      'China': '🇨🇳', 'Singapore': '🇸🇬', 'Greece': '🇬🇷', 'Poland': '🇵🇱',
+      'Sweden': '🇸🇪', 'Denmark': '🇩🇰', 'Norway': '🇳🇴', 'Finland': '🇫🇮',
+      'Portugal': '🇵🇹', 'Brazil': '🇧🇷', 'Mexico': '🇲🇽', 'South Africa': '🇿🇦',
+      'Ireland': '🇮🇪', 'Belgium': '🇧🇪', 'Czech Republic': '🇨🇿', 'Hungary': '🇭🇺',
+      'New Zealand': '🇳🇿', 'UAE': '🇦🇪', 'Saudi Arabia': '🇸🇦', 'Hong Kong': '🇭🇰'
+    }
+
+    try {
+      const today = new Date().toISOString().split('T')[0]
+      const { data: events } = await supabase
+        .from('hyrox_events')
+        .select('*')
+        .eq('is_active', true)
+        .gte('event_date', today)
+        .order('event_date', { ascending: true })
+        .limit(5)
+
+      if (events && events.length > 0) {
+        const widget = document.getElementById('eventsWidget')
+        const scroll = document.getElementById('eventsScroll')
+        widget.style.display = 'block'
+
+        scroll.innerHTML = events.map(e => {
+          const flag = countryFlags[e.country] || '🏳️'
+          const dateStr = e.event_date
+            ? new Date(e.event_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+            : 'Date TBD'
+
+          let countdown = ''
+          if (e.event_date) {
+            const diff = Math.ceil((new Date(e.event_date + 'T00:00:00') - new Date()) / 86400000)
+            if (diff > 0) countdown = `${diff}d`
+            else if (diff === 0) countdown = 'TODAY'
+          }
+
+          const hasMap = !!e.venue_map_url
+
+          return `
+            <a href="events.html" class="event-widget-card">
+              <div class="event-widget-top">
+                <span class="event-widget-flag">${flag}</span>
+                <div class="event-widget-info">
+                  <h4>${e.event_name || e.city || 'HYROX Event'}</h4>
+                  <p>${e.city || ''}${e.city && e.country ? ', ' : ''}${e.country || ''}</p>
+                </div>
+              </div>
+              <div class="event-widget-bottom">
+                <span class="event-widget-date">${dateStr}</span>
+                ${hasMap ? '<span class="event-widget-map-badge">🗺️ Map</span>' : ''}
+                ${countdown ? `<span class="event-widget-countdown">${countdown}</span>` : ''}
+              </div>
+            </a>
+          `
+        }).join('')
+      }
+    } catch (err) {
+      console.log('Events widget:', err.message)
     }
   </script>
 </body>

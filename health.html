@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Health — HYROX SIM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/global.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .health-page {
+      min-height: 100vh; padding: 6rem 2rem 4rem;
+      background: radial-gradient(ellipse at 50% 0%, rgba(200,255,0,.04) 0%, transparent 60%), var(--dark);
+    }
+    .health-container { max-width: 1000px; margin: 0 auto; }
+
+    .health-hero { text-align: center; margin-bottom: 2rem; }
+    .health-hero h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      color: #fff; letter-spacing: 2px;
+    }
+    .health-hero h1 .accent { color: var(--neon); }
+    .health-hero p { color: var(--text-muted); margin-top: .5rem; max-width: 550px; margin-inline: auto; }
+
+    /* Recovery Status */
+    .recovery-card {
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .recovery-card.ready { background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.3); }
+    .recovery-card.moderate { background: rgba(251, 191, 36, 0.15); border: 1px solid rgba(251, 191, 36, 0.3); }
+    .recovery-card.rest { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); }
+    .recovery-dot {
+      width: 16px; height: 16px; border-radius: 50%;
+    }
+    .recovery-dot.ready { background: #34d399; }
+    .recovery-dot.moderate { background: #fbbf24; }
+    .recovery-dot.rest { background: #ef4444; }
+    .recovery-message {
+      font-size: 1.2rem; font-weight: 600; color: #fff;
+    }
+    .recovery-details {
+      margin-left: auto;
+      font-size: 0.85rem; color: var(--text-muted);
+    }
+
+    /* Metrics Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 768px) {
+      .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 480px) {
+      .metrics-grid { grid-template-columns: 1fr; }
+    }
+
+    .metric-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      padding: 1.5rem;
+      text-align: center;
+      border-radius: 12px;
+      transition: border-color 0.3s;
+    }
+    .metric-card:hover { border-color: var(--neon); }
+    .metric-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .metric-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.5rem;
+      color: var(--neon);
+      line-height: 1;
+    }
+    .metric-unit {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-left: 4px;
+    }
+    .metric-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+    .metric-status {
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      font-weight: 500;
+    }
+    .metric-status.good { color: #34d399; }
+    .metric-status.moderate { color: #fbbf24; }
+    .metric-status.low { color: #ef4444; }
+
+    /* Chart Section */
+    .chart-section {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+    }
+    .chart-section h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.3rem;
+      color: #fff;
+      letter-spacing: 2px;
+      margin-bottom: 1rem;
+    }
+    .chart-section h2 .accent { color: var(--neon); }
+    .chart-container { height: 200px; }
+
+    /* Sync Status */
+    .sync-status {
+      text-align: center;
+      padding: 1rem;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+    .sync-status a { color: var(--neon); }
+
+    /* No Data State */
+    .no-data {
+      text-align: center;
+      padding: 4rem 2rem;
+    }
+    .no-data-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+    .no-data h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem;
+      color: #fff;
+      margin-bottom: 0.5rem;
+    }
+    .no-data p {
+      color: var(--text-muted);
+      max-width: 400px;
+      margin: 0 auto 1.5rem;
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="logo">HYROX<span>SIM</span></a>
+    <ul class="nav-links">
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="workouts.html">Workouts</a></li>
+      <li><a href="health.html" class="active">Health</a></li>
+      <li><a href="pace-calculator.html">PaceMe</a></li>
+      <li><a href="race-history.html">Races</a></li>
+      <li><a href="events.html">Events</a></li>
+    </ul>
+    <div class="nav-right">
+      <a href="login.html" class="nav-cta">Sign In</a>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+  <div class="mobile-menu" id="mobileMenu">
+    <button class="mobile-close" id="mobileClose" aria-label="Close menu">&times;</button>
+    <a href="dashboard.html" class="mobile-nav-link">Dashboard</a>
+    <a href="workouts.html" class="mobile-nav-link">Workouts</a>
+    <a href="health.html" class="mobile-nav-link">Health</a>
+    <a href="pace-calculator.html" class="mobile-nav-link">PaceMe</a>
+    <a href="race-history.html" class="mobile-nav-link">Races</a>
+    <a href="events.html" class="mobile-nav-link">Events</a>
+    <a href="training-plans.html" class="mobile-nav-link">Training Plans</a>
+    <a href="profile.html" class="mobile-nav-link">Profile</a>
+  </div>
+
+  <div class="health-page">
+    <div class="health-container">
+
+      <div class="health-hero fade-in">
+        <h1>HEALTH <span class="accent">METRICS</span></h1>
+        <p>Track your recovery, fitness, and performance data synced from your Apple Watch.</p>
+      </div>
+
+      <!-- Loading State -->
+      <div id="loadingState" class="no-data">
+        <div class="no-data-icon">⏳</div>
+        <h2>Loading Health Data...</h2>
+      </div>
+
+      <!-- No Data State -->
+      <div id="noDataState" class="no-data" style="display: none;">
+        <div class="no-data-icon">📱</div>
+        <h2>No Health Data Yet</h2>
+        <p>Open the RoxSim iOS app on your iPhone to sync your health data from Apple Watch.</p>
+        <a href="dashboard.html" class="btn-primary">Go to Dashboard</a>
+      </div>
+
+      <!-- Health Data Content -->
+      <div id="healthContent" style="display: none;">
+
+        <!-- Recovery Status Card -->
+        <div id="recoveryCard" class="recovery-card ready fade-in">
+          <div class="recovery-dot ready"></div>
+          <div class="recovery-message">Ready for high intensity</div>
+          <div class="recovery-details">
+            <span id="recoveryHRV">HRV: --</span> • <span id="recoveryRHR">RHR: --</span>
+          </div>
+        </div>
+
+        <!-- Primary Metrics -->
+        <div class="metrics-grid fade-in">
+          <div class="metric-card">
+            <div class="metric-icon">❤️</div>
+            <div class="metric-value"><span id="restingHR">--</span><span class="metric-unit">bpm</span></div>
+            <div class="metric-label">Resting Heart Rate</div>
+            <div id="restingHRStatus" class="metric-status"></div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-icon">🫁</div>
+            <div class="metric-value"><span id="vo2Max">--</span></div>
+            <div class="metric-label">VO2 Max</div>
+            <div id="vo2Status" class="metric-status"></div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-icon">📊</div>
+            <div class="metric-value"><span id="hrv">--</span><span class="metric-unit">ms</span></div>
+            <div class="metric-label">HRV</div>
+            <div id="hrvStatus" class="metric-status"></div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-icon">⬇️</div>
+            <div class="metric-value"><span id="hrRecovery">--</span><span class="metric-unit">bpm</span></div>
+            <div class="metric-label">HR Recovery</div>
+            <div id="hrRecoveryStatus" class="metric-status"></div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-icon">😴</div>
+            <div class="metric-value"><span id="sleepHours">--</span><span class="metric-unit">hrs</span></div>
+            <div class="metric-label">Sleep</div>
+            <div id="sleepStatus" class="metric-status"></div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-icon">⚖️</div>
+            <div class="metric-value"><span id="weight">--</span><span class="metric-unit">kg</span></div>
+            <div class="metric-label">Weight</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-icon">🏃</div>
+            <div class="metric-value"><span id="runningDistance">--</span><span class="metric-unit">km</span></div>
+            <div class="metric-label">Weekly Running</div>
+            <div id="runningStatus" class="metric-status"></div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-icon">👟</div>
+            <div class="metric-value"><span id="steps">--</span></div>
+            <div class="metric-label">Weekly Steps</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-icon">🔥</div>
+            <div class="metric-value"><span id="calories">--</span><span class="metric-unit">kcal</span></div>
+            <div class="metric-label">Weekly Calories</div>
+          </div>
+        </div>
+
+        <!-- HRV Chart -->
+        <div class="chart-section fade-in">
+          <h2>HRV <span class="accent">Trend</span></h2>
+          <div class="chart-container">
+            <canvas id="hrvChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Resting HR Chart -->
+        <div class="chart-section fade-in">
+          <h2>Resting Heart Rate <span class="accent">Trend</span></h2>
+          <div class="chart-container">
+            <canvas id="rhrChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Sync Status -->
+        <div class="sync-status">
+          <span id="lastSync">Last synced: --</span>
+          <br>
+          <small>Open the iOS app to sync latest data</small>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    <a href="index.html" class="logo">HYROX<span>SIM</span></a>
+    <p>&copy; 2025 HyroxSim. Train hard. Race harder.</p>
+  </footer>
+
+  <script type="module">
+    import { initPage, requireAuth } from './js/shared.js'
+    import { supabase } from './js/supabase-client.js'
+
+    initPage()
+    await requireAuth()
+
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      window.location.href = 'login.html'
+    }
+
+    // Fetch health metrics from Supabase
+    const { data: metrics, error } = await supabase
+      .from('health_metrics')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .order('recorded_at', { ascending: false })
+      .limit(100)
+
+    document.getElementById('loadingState').style.display = 'none'
+
+    if (error || !metrics || metrics.length === 0) {
+      document.getElementById('noDataState').style.display = 'block'
+    } else {
+      document.getElementById('healthContent').style.display = 'block'
+      displayMetrics(metrics)
+    }
+
+    function displayMetrics(metrics) {
+      // Group by metric type, get latest of each
+      const latest = {}
+      const history = {}
+
+      metrics.forEach(m => {
+        if (!latest[m.metric_type]) {
+          latest[m.metric_type] = m
+        }
+        if (!history[m.metric_type]) {
+          history[m.metric_type] = []
+        }
+        history[m.metric_type].push(m)
+      })
+
+      // Display latest values
+      if (latest.resting_hr) {
+        const val = parseFloat(latest.resting_hr.value)
+        document.getElementById('restingHR').textContent = Math.round(val)
+        document.getElementById('restingHRStatus').textContent = getRHRStatus(val)
+        document.getElementById('restingHRStatus').className = 'metric-status ' + getRHRStatusClass(val)
+        document.getElementById('recoveryRHR').textContent = `RHR: ${Math.round(val)}bpm`
+      }
+
+      if (latest.vo2_max) {
+        const val = parseFloat(latest.vo2_max.value)
+        document.getElementById('vo2Max').textContent = val.toFixed(1)
+        document.getElementById('vo2Status').textContent = getVO2Status(val)
+        document.getElementById('vo2Status').className = 'metric-status ' + getVO2StatusClass(val)
+      }
+
+      if (latest.hrv) {
+        const val = parseFloat(latest.hrv.value)
+        document.getElementById('hrv').textContent = Math.round(val)
+        document.getElementById('hrvStatus').textContent = getHRVStatus(val)
+        document.getElementById('hrvStatus').className = 'metric-status ' + getHRVStatusClass(val)
+        document.getElementById('recoveryHRV').textContent = `HRV: ${Math.round(val)}ms`
+      }
+
+      if (latest.hr_recovery) {
+        const val = parseFloat(latest.hr_recovery.value)
+        document.getElementById('hrRecovery').textContent = Math.round(val)
+        document.getElementById('hrRecoveryStatus').textContent = getHRRStatus(val)
+        document.getElementById('hrRecoveryStatus').className = 'metric-status ' + getHRRStatusClass(val)
+      }
+
+      if (latest.sleep_hours) {
+        const val = parseFloat(latest.sleep_hours.value)
+        document.getElementById('sleepHours').textContent = val.toFixed(1)
+        document.getElementById('sleepStatus').textContent = getSleepStatus(val)
+        document.getElementById('sleepStatus').className = 'metric-status ' + getSleepStatusClass(val)
+      }
+
+      if (latest.weight) {
+        document.getElementById('weight').textContent = parseFloat(latest.weight.value).toFixed(1)
+      }
+
+      if (latest.running_distance) {
+        const val = parseFloat(latest.running_distance.value)
+        document.getElementById('runningDistance').textContent = val.toFixed(1)
+        const pct = Math.min(val / 8 * 100, 100)
+        document.getElementById('runningStatus').textContent = `${Math.round(pct)}% of 8km goal`
+        document.getElementById('runningStatus').className = 'metric-status ' + (pct >= 100 ? 'good' : 'moderate')
+      }
+
+      if (latest.steps) {
+        const val = parseInt(latest.steps.value)
+        document.getElementById('steps').textContent = formatSteps(val)
+      }
+
+      if (latest.active_calories) {
+        document.getElementById('calories').textContent = Math.round(parseFloat(latest.active_calories.value))
+      }
+
+      // Update recovery status
+      updateRecoveryStatus(latest)
+
+      // Update last sync time
+      const latestTime = metrics[0]?.recorded_at
+      if (latestTime) {
+        const syncDate = new Date(latestTime)
+        const now = new Date()
+        const diffHours = Math.round((now - syncDate) / (1000 * 60 * 60))
+        if (diffHours < 1) {
+          document.getElementById('lastSync').textContent = 'Last synced: Just now'
+        } else if (diffHours < 24) {
+          document.getElementById('lastSync').textContent = `Last synced: ${diffHours} hours ago`
+        } else {
+          document.getElementById('lastSync').textContent = `Last synced: ${Math.round(diffHours / 24)} days ago`
+        }
+      }
+
+      // Draw charts
+      drawHRVChart(history.hrv || [])
+      drawRHRChart(history.resting_hr || [])
+    }
+
+    function updateRecoveryStatus(latest) {
+      const card = document.getElementById('recoveryCard')
+      const dot = card.querySelector('.recovery-dot')
+      const msg = card.querySelector('.recovery-message')
+
+      const hrv = latest.hrv ? parseFloat(latest.hrv.value) : null
+      const rhr = latest.resting_hr ? parseFloat(latest.resting_hr.value) : null
+
+      let status = 'moderate'
+      let message = 'Moderate intensity recommended'
+
+      if (hrv !== null && rhr !== null) {
+        if (hrv >= 50 && rhr <= 60) {
+          status = 'ready'
+          message = 'Ready for high intensity'
+        } else if (hrv < 30 || rhr > 70) {
+          status = 'rest'
+          message = 'Consider active recovery today'
+        }
+      }
+
+      card.className = `recovery-card ${status} fade-in`
+      dot.className = `recovery-dot ${status}`
+      msg.textContent = message
+    }
+
+    function drawHRVChart(data) {
+      if (data.length < 2) return
+
+      const ctx = document.getElementById('hrvChart').getContext('2d')
+      const labels = data.slice(0, 7).reverse().map(d => {
+        const date = new Date(d.recorded_at)
+        return date.toLocaleDateString('en-US', { weekday: 'short' })
+      })
+      const values = data.slice(0, 7).reverse().map(d => parseFloat(d.value))
+
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'HRV (ms)',
+            data: values,
+            borderColor: '#a855f7',
+            backgroundColor: 'rgba(168, 85, 247, 0.1)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 4,
+            pointBackgroundColor: '#a855f7'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              beginAtZero: false,
+              grid: { color: 'rgba(255,255,255,0.05)' },
+              ticks: { color: '#888' }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { color: '#888' }
+            }
+          }
+        }
+      })
+    }
+
+    function drawRHRChart(data) {
+      if (data.length < 2) return
+
+      const ctx = document.getElementById('rhrChart').getContext('2d')
+      const labels = data.slice(0, 7).reverse().map(d => {
+        const date = new Date(d.recorded_at)
+        return date.toLocaleDateString('en-US', { weekday: 'short' })
+      })
+      const values = data.slice(0, 7).reverse().map(d => parseFloat(d.value))
+
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Resting HR (bpm)',
+            data: values,
+            borderColor: '#ef4444',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 4,
+            pointBackgroundColor: '#ef4444'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              beginAtZero: false,
+              grid: { color: 'rgba(255,255,255,0.05)' },
+              ticks: { color: '#888' }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { color: '#888' }
+            }
+          }
+        }
+      })
+    }
+
+    // Status helpers
+    function getRHRStatus(val) {
+      if (val < 50) return 'Excellent'
+      if (val < 60) return 'Good'
+      if (val < 70) return 'Above Average'
+      if (val < 80) return 'Average'
+      return 'Below Average'
+    }
+    function getRHRStatusClass(val) {
+      if (val < 60) return 'good'
+      if (val < 70) return 'moderate'
+      return 'low'
+    }
+
+    function getVO2Status(val) {
+      if (val >= 50) return 'Excellent'
+      if (val >= 42) return 'Good'
+      if (val >= 35) return 'Average'
+      return 'Below Average'
+    }
+    function getVO2StatusClass(val) {
+      if (val >= 42) return 'good'
+      if (val >= 35) return 'moderate'
+      return 'low'
+    }
+
+    function getHRVStatus(val) {
+      if (val >= 60) return 'Excellent Recovery'
+      if (val >= 50) return 'Good Recovery'
+      if (val >= 40) return 'Moderate'
+      if (val >= 30) return 'Below Average'
+      return 'Low - Consider Rest'
+    }
+    function getHRVStatusClass(val) {
+      if (val >= 50) return 'good'
+      if (val >= 35) return 'moderate'
+      return 'low'
+    }
+
+    function getHRRStatus(val) {
+      if (val >= 40) return 'Excellent'
+      if (val >= 30) return 'Good'
+      if (val >= 20) return 'Average'
+      return 'Below Average'
+    }
+    function getHRRStatusClass(val) {
+      if (val >= 30) return 'good'
+      if (val >= 20) return 'moderate'
+      return 'low'
+    }
+
+    function getSleepStatus(val) {
+      if (val >= 7.5) return 'Great'
+      if (val >= 6) return 'Good'
+      if (val >= 5) return 'Fair'
+      return 'Poor'
+    }
+    function getSleepStatusClass(val) {
+      if (val >= 7) return 'good'
+      if (val >= 5.5) return 'moderate'
+      return 'low'
+    }
+
+    function formatSteps(val) {
+      if (val >= 1000) return (val / 1000).toFixed(1) + 'k'
+      return val.toString()
+    }
+  </script>
+</body>
+</html>

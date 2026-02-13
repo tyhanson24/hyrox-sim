@@ -87,8 +87,120 @@
       color: var(--text-muted); font-size: .85rem; margin-top: .8rem;
     }
 
+    /* ── ACTION BUTTONS ROW ── */
+    .action-row {
+      display: flex; gap: 1rem; justify-content: center;
+      flex-wrap: wrap; margin-bottom: 1rem;
+    }
+
+    /* ── ACTIVE WORKOUT OVERLAY ── */
+    .workout-active {
+      display: none; position: fixed; inset: 0; z-index: 500;
+      background: var(--dark);
+      flex-direction: column;
+    }
+    .workout-active.open { display: flex; }
+
+    .wa-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--card-border);
+      flex-shrink: 0;
+    }
+    .wa-header h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.2rem; color: #fff; letter-spacing: 1px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      max-width: 60%;
+    }
+    .wa-timer {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem; color: var(--neon); letter-spacing: 2px;
+    }
+    .wa-close {
+      background: none; border: 1px solid #333; color: var(--text-muted);
+      padding: .3rem .8rem; font-size: .75rem; text-transform: uppercase;
+      letter-spacing: 1px; cursor: pointer; font-family: 'Inter', sans-serif;
+      transition: all .3s; flex-shrink: 0;
+    }
+    .wa-close:hover { border-color: var(--accent); color: var(--accent); }
+
+    .wa-progress-bar {
+      height: 4px; background: #1a1a1a; flex-shrink: 0;
+    }
+    .wa-progress-fill {
+      height: 100%; background: var(--neon);
+      transition: width .3s ease;
+    }
+
+    .wa-body {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 2rem; text-align: center; overflow-y: auto;
+    }
+    .wa-step-label {
+      font-size: .75rem; text-transform: uppercase; letter-spacing: 2px;
+      color: var(--text-muted); margin-bottom: .5rem;
+    }
+    .wa-exercise-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2rem, 8vw, 4rem);
+      color: #fff; letter-spacing: 2px; line-height: 1.1;
+    }
+    .wa-exercise-detail {
+      display: flex; gap: .8rem; flex-wrap: wrap;
+      justify-content: center; margin-top: 1rem;
+    }
+    .wa-exercise-detail span {
+      font-size: .8rem; text-transform: uppercase; letter-spacing: 1px;
+      color: var(--neon); background: rgba(200,255,0,.08);
+      padding: .3rem .8rem;
+    }
+    .wa-exercise-notes {
+      color: var(--text-muted); font-size: .9rem;
+      margin-top: 1rem; max-width: 500px; line-height: 1.6;
+    }
+
+    .wa-footer {
+      display: flex; align-items: center; justify-content: center;
+      gap: 1rem; padding: 1.5rem; flex-shrink: 0;
+      border-top: 1px solid var(--card-border);
+    }
+    .wa-nav-btn {
+      background: transparent; color: #fff; padding: .8rem 1.8rem;
+      font-weight: 700; font-size: .85rem; text-transform: uppercase;
+      letter-spacing: 1px; border: 2px solid #333; cursor: pointer;
+      font-family: 'Inter', sans-serif; transition: all .3s;
+    }
+    .wa-nav-btn:hover { border-color: var(--neon); color: var(--neon); }
+    .wa-nav-btn:disabled { opacity: .3; cursor: not-allowed; }
+    .wa-nav-btn.primary {
+      background: var(--neon); color: #000; border-color: var(--neon);
+      clip-path: polygon(0 0,100% 0,96% 100%,0% 100%);
+    }
+    .wa-nav-btn.primary:hover { background: #daff33; border-color: #daff33; }
+
+    .wa-done {
+      text-align: center;
+    }
+    .wa-done h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 3rem; color: var(--neon); letter-spacing: 2px;
+    }
+    .wa-done p {
+      color: var(--text-muted); margin-top: .5rem; font-size: .95rem;
+    }
+    .wa-done .wa-final-time {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.5rem; color: #fff; margin-top: 1rem; letter-spacing: 2px;
+    }
+
     @media (max-width: 768px) {
       .detail-page { padding: 5rem 1rem 3rem; }
+      .wa-header { padding: .8rem 1rem; }
+      .wa-timer { font-size: 1.4rem; }
+      .wa-footer { padding: 1rem; }
+      .wa-nav-btn { padding: .7rem 1.2rem; font-size: .8rem; }
     }
   </style>
 </head>
@@ -99,8 +211,9 @@
     <ul class="nav-links">
       <li><a href="dashboard.html">Dashboard</a></li>
       <li><a href="workouts.html" class="active">Workouts</a></li>
-      <li><a href="index.html#timer">Sim Timer</a></li>
+      <li><a href="health.html">Health</a></li>
       <li><a href="pace-calculator.html">PaceMe</a></li>
+      <li><a href="events.html">Events</a></li>
     </ul>
     <div class="nav-right">
       <a href="login.html" class="nav-cta">Sign In</a>
@@ -113,9 +226,10 @@
     <button class="mobile-close" id="mobileClose" aria-label="Close menu">&times;</button>
     <a href="dashboard.html" class="mobile-nav-link">Dashboard</a>
     <a href="workouts.html" class="mobile-nav-link">Workouts</a>
-    <a href="index.html#timer" class="mobile-nav-link">Sim Timer</a>
+    <a href="health.html" class="mobile-nav-link">Health</a>
     <a href="pace-calculator.html" class="mobile-nav-link">PaceMe</a>
     <a href="race-history.html" class="mobile-nav-link">Races</a>
+    <a href="events.html" class="mobile-nav-link">Events</a>
     <a href="profile.html" class="mobile-nav-link">Profile</a>
   </div>
 
@@ -126,6 +240,23 @@
       <div id="workoutContent">
         <div class="dash-loading" style="text-align:center;padding:4rem;color:var(--text-muted);">Loading workout...</div>
       </div>
+    </div>
+  </div>
+
+  <!-- Active Workout Overlay -->
+  <div class="workout-active" id="workoutActive">
+    <div class="wa-header">
+      <h3 id="waTitle"></h3>
+      <span class="wa-timer" id="waTimer">00:00</span>
+      <button class="wa-close" id="waClose">End</button>
+    </div>
+    <div class="wa-progress-bar">
+      <div class="wa-progress-fill" id="waProgress" style="width:0%"></div>
+    </div>
+    <div class="wa-body" id="waBody"></div>
+    <div class="wa-footer" id="waFooter">
+      <button class="wa-nav-btn" id="waPrev" disabled>Prev</button>
+      <button class="wa-nav-btn primary" id="waNext">Next</button>
     </div>
   </div>
 
@@ -213,10 +344,13 @@
           `
         }
 
-        // Log Completed
+        // Action Buttons
         html += `
           <div class="log-section fade-in">
-            <button class="btn-primary" id="logBtn">Log Completed</button>
+            <div class="action-row">
+              ${stations.length > 0 ? `<button class="btn-primary" id="startBtn">Start Workout</button>` : ''}
+              <button class="btn-secondary" id="logBtn">Log Completed</button>
+            </div>
             <p id="logStatus"></p>
           </div>
         `
@@ -258,6 +392,127 @@
             document.getElementById('logStatus').innerHTML = 'Workout added to your history. <a href="dashboard.html" style="color:var(--neon);">View Dashboard</a>'
           }
         })
+
+        // ── Start Workout Flow ──
+        const startBtn = document.getElementById('startBtn')
+        if (startBtn && stations.length > 0) {
+          let currentStep = 0
+          let timerInterval = null
+          let elapsedSeconds = 0
+
+          const overlay = document.getElementById('workoutActive')
+          const waTitle = document.getElementById('waTitle')
+          const waTimer = document.getElementById('waTimer')
+          const waBody = document.getElementById('waBody')
+          const waProgress = document.getElementById('waProgress')
+          const waFooter = document.getElementById('waFooter')
+          const waPrev = document.getElementById('waPrev')
+          const waNext = document.getElementById('waNext')
+
+          function fmtTime(sec) {
+            const m = Math.floor(sec / 60).toString().padStart(2, '0')
+            const s = (sec % 60).toString().padStart(2, '0')
+            return `${m}:${s}`
+          }
+
+          function renderStep() {
+            const total = stations.length
+            if (currentStep >= total) {
+              // Done
+              clearInterval(timerInterval)
+              waProgress.style.width = '100%'
+              waBody.innerHTML = `
+                <div class="wa-done">
+                  <h2>Workout Complete</h2>
+                  <p>You crushed it.</p>
+                  <div class="wa-final-time">${fmtTime(elapsedSeconds)}</div>
+                </div>
+              `
+              waFooter.innerHTML = `
+                <button class="wa-nav-btn" id="waDone">Close</button>
+                <button class="wa-nav-btn primary" id="waLogDone">Log & Close</button>
+              `
+              document.getElementById('waDone').addEventListener('click', closeWorkout)
+              document.getElementById('waLogDone').addEventListener('click', async () => {
+                const { data: { session } } = await supabase.auth.getSession()
+                if (!session) {
+                  showToast('Sign in to log workouts', 'error')
+                  closeWorkout()
+                  return
+                }
+                await supabase.from('workout_logs').insert({
+                  user_id: session.user.id,
+                  workout_id: workoutId,
+                  duration_seconds: elapsedSeconds,
+                  source: 'web'
+                })
+                showToast('Workout logged!', 'success')
+                closeWorkout()
+              })
+              return
+            }
+
+            const s = stations[currentStep]
+            waProgress.style.width = `${((currentStep) / total) * 100}%`
+
+            let detailHtml = ''
+            if (s.reps) detailHtml += `<span>${s.reps}</span>`
+            if (s.duration) detailHtml += `<span>${s.duration}</span>`
+            if (s.distance) detailHtml += `<span>${s.distance}</span>`
+            if (s.rest) detailHtml += `<span>Rest: ${s.rest}</span>`
+
+            waBody.innerHTML = `
+              <div class="wa-step-label">Exercise ${currentStep + 1} of ${total}</div>
+              <div class="wa-exercise-name">${s.name}</div>
+              ${detailHtml ? `<div class="wa-exercise-detail">${detailHtml}</div>` : ''}
+              ${s.notes ? `<p class="wa-exercise-notes">${s.notes}</p>` : ''}
+            `
+
+            waPrev.disabled = currentStep === 0
+            waNext.textContent = currentStep === total - 1 ? 'Finish' : 'Next'
+          }
+
+          function startTimer() {
+            elapsedSeconds = 0
+            waTimer.textContent = '00:00'
+            timerInterval = setInterval(() => {
+              elapsedSeconds++
+              waTimer.textContent = fmtTime(elapsedSeconds)
+            }, 1000)
+          }
+
+          function closeWorkout() {
+            clearInterval(timerInterval)
+            overlay.classList.remove('open')
+            currentStep = 0
+            elapsedSeconds = 0
+          }
+
+          startBtn.addEventListener('click', () => {
+            waTitle.textContent = workout.title
+            currentStep = 0
+            // Restore footer buttons
+            waFooter.innerHTML = `
+              <button class="wa-nav-btn" id="waPrev" disabled>Prev</button>
+              <button class="wa-nav-btn primary" id="waNext">Next</button>
+            `
+            // Re-bind after innerHTML reset
+            const prevBtn = document.getElementById('waPrev')
+            const nextBtn = document.getElementById('waNext')
+            prevBtn.addEventListener('click', () => {
+              if (currentStep > 0) { currentStep--; renderStep() }
+            })
+            nextBtn.addEventListener('click', () => {
+              currentStep++
+              renderStep()
+            })
+            overlay.classList.add('open')
+            renderStep()
+            startTimer()
+          })
+
+          document.getElementById('waClose').addEventListener('click', closeWorkout)
+        }
       }
     }
   </script>

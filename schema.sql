@@ -137,3 +137,25 @@ CREATE TABLE IF NOT EXISTS contact_submissions (
 
 ALTER TABLE contact_submissions ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Anyone can submit contact" ON contact_submissions FOR INSERT WITH CHECK (true);
+
+-- ── Health Metrics (synced from iOS HealthKit) ──
+CREATE TABLE IF NOT EXISTS health_metrics (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  recorded_at TIMESTAMPTZ NOT NULL,
+  metric_type TEXT NOT NULL CHECK (metric_type IN (
+    'resting_hr', 'vo2_max', 'hrv', 'hr_recovery',
+    'sleep_hours', 'weight', 'running_distance', 'steps', 'active_calories'
+  )),
+  value NUMERIC NOT NULL,
+  unit TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(user_id, recorded_at, metric_type)
+);
+
+CREATE INDEX IF NOT EXISTS idx_health_metrics_user ON health_metrics(user_id, metric_type, recorded_at DESC);
+
+ALTER TABLE health_metrics ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users see own health data" ON health_metrics FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users insert own health data" ON health_metrics FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users update own health data" ON health_metrics FOR UPDATE USING (auth.uid() = user_id);
