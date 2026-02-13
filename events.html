@@ -183,6 +183,114 @@
       font-size: .75rem; color: var(--text-muted);
     }
 
+    /* Interactive Map Container */
+    .interactive-map-container {
+      position: relative; width: 100%; overflow: hidden;
+    }
+    .interactive-map-container img {
+      width: 100%; display: block;
+    }
+    .station-overlay {
+      position: absolute; inset: 0; pointer-events: none;
+    }
+    .station-marker {
+      position: absolute; transform: translate(-50%, -50%);
+      pointer-events: all; cursor: pointer; z-index: 2;
+    }
+    .station-dot {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 800; color: #000;
+      background: var(--neon); border: 2px solid rgba(0,0,0,.6);
+      box-shadow: 0 0 8px rgba(200,255,0,.5);
+      transition: transform .2s, box-shadow .2s;
+      font-family: 'Inter', sans-serif;
+    }
+    .station-marker:hover .station-dot {
+      transform: scale(1.3);
+      box-shadow: 0 0 16px rgba(200,255,0,.8);
+    }
+    .station-marker.roxzone .station-dot {
+      background: #ff3c00; color: #fff; width: 32px; height: 32px;
+      font-size: 10px; letter-spacing: .5px;
+      box-shadow: 0 0 8px rgba(255,60,0,.5);
+    }
+    .station-marker.start-finish .station-dot {
+      background: #fff; color: #000; width: 32px; height: 32px; font-size: 9px;
+      box-shadow: 0 0 8px rgba(255,255,255,.5);
+    }
+    .station-label {
+      position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+      white-space: nowrap; font-size: 9px; font-weight: 700;
+      color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.9);
+      padding-top: 3px; text-transform: uppercase; letter-spacing: .5px;
+      opacity: 0; transition: opacity .2s;
+      font-family: 'Inter', sans-serif;
+    }
+    .station-marker:hover .station-label { opacity: 1; }
+
+    /* Station path line (SVG) */
+    .station-path-svg {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: 1;
+    }
+    .station-path-line {
+      fill: none; stroke: var(--neon); stroke-width: 1.5;
+      stroke-dasharray: 4 3; opacity: .4;
+    }
+    .run-path-line {
+      fill: none; stroke: var(--neon); stroke-width: 1.5;
+      stroke-dasharray: 4 3; opacity: .4;
+    }
+    .workout-path-line {
+      fill: none; stroke: #ff3c00; stroke-width: 1.5;
+      stroke-dasharray: 4 3; opacity: .4;
+    }
+
+    /* Station tooltip (fullscreen map) */
+    .station-tooltip {
+      position: absolute; z-index: 10;
+      background: rgba(10,10,10,.95); border: 1px solid var(--neon);
+      padding: .8rem 1rem; min-width: 160px;
+      pointer-events: none; opacity: 0; transition: opacity .2s;
+      transform: translate(-50%, -100%); margin-top: -12px;
+    }
+    .station-tooltip.visible { opacity: 1; pointer-events: all; }
+    .station-tooltip h4 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem; color: var(--neon); margin: 0 0 .3rem;
+      letter-spacing: 1px;
+    }
+    .station-tooltip .tip-detail {
+      font-size: .75rem; color: var(--text-muted); line-height: 1.4;
+    }
+
+    /* Map legend */
+    .map-legend {
+      display: flex; gap: 1rem; align-items: center;
+      flex-wrap: wrap; margin-top: .6rem;
+      padding: .4rem .6rem;
+      background: rgba(255,255,255,.03);
+      font-size: .7rem; color: var(--text-muted);
+    }
+    .map-legend-item { display: flex; align-items: center; gap: .3rem; }
+    .legend-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+    }
+    .legend-dot.station { background: var(--neon); }
+    .legend-dot.roxzone { background: #ff3c00; }
+    .legend-dot.start { background: #fff; }
+
+    /* Ghost racer indicator */
+    .ghost-badge {
+      display: inline-flex; align-items: center; gap: .3rem;
+      padding: .15rem .5rem; font-size: .65rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .5px;
+      background: rgba(100,149,237,.1); color: #6495ed;
+      margin-left: .5rem;
+    }
+    .ghost-badge .ghost-icon { font-size: .8rem; }
+
     .no-results {
       text-align: center; padding: 3rem; color: var(--text-muted);
       grid-column: 1 / -1;
@@ -225,14 +333,32 @@
     <a href="profile.html" class="mobile-nav-link">Profile</a>
   </div>
 
-  <!-- Fullscreen Map Overlay -->
+  <!-- Fullscreen Map Overlay (Interactive) -->
   <div class="map-overlay" id="mapOverlay">
     <div class="map-overlay-header">
       <span class="map-overlay-title" id="mapOverlayTitle"></span>
-      <button class="map-overlay-close" id="mapOverlayClose">&times;</button>
+      <div style="display:flex;align-items:center;gap:.8rem;">
+        <label style="display:flex;align-items:center;gap:.4rem;font-size:.75rem;color:var(--text-muted);cursor:pointer;">
+          <input type="checkbox" id="toggleStations" checked style="accent-color:var(--neon);">
+          Stations
+        </label>
+        <label style="display:flex;align-items:center;gap:.4rem;font-size:.75rem;color:var(--text-muted);cursor:pointer;">
+          <input type="checkbox" id="togglePath" checked style="accent-color:var(--neon);">
+          Path
+        </label>
+        <button class="map-overlay-close" id="mapOverlayClose">&times;</button>
+      </div>
     </div>
-    <img id="mapOverlayImg" src="" alt="Venue Map">
-    <span class="map-overlay-hint">Pinch to zoom on mobile</span>
+    <div class="interactive-map-container" id="mapOverlayContainer" style="max-width:95vw;max-height:85vh;">
+      <img id="mapOverlayImg" src="" alt="Venue Map" style="max-width:95vw;max-height:85vh;object-fit:contain;">
+      <div class="station-overlay" id="mapOverlayStations"></div>
+      <svg class="station-path-svg" id="mapOverlayPath"></svg>
+    </div>
+    <div class="station-tooltip" id="stationTooltip">
+      <h4 id="tooltipTitle"></h4>
+      <div class="tip-detail" id="tooltipDetail"></div>
+    </div>
+    <span class="map-overlay-hint">Click a station for details · Pinch to zoom on mobile</span>
   </div>
 
   <div class="events-page">
@@ -445,13 +571,26 @@
 
             <div class="event-map-section">
               ${hasMap ? `
-                <img
-                  class="event-map-thumb"
-                  src="${event.venue_map_url}"
-                  alt="Venue map for ${event.name}"
-                  loading="lazy"
-                  onclick="window._showMap('${event.venue_map_url.replace(/'/g, "\\'")}', '${event.name.replace(/'/g, "\\'")}')"
-                >
+                <div class="interactive-map-container" style="aspect-ratio:16/10;">
+                  <img
+                    class="event-map-thumb"
+                    src="${event.venue_map_url}"
+                    alt="Venue map for ${event.name}"
+                    loading="lazy"
+                    onclick="window._showMap('${event.venue_map_url.replace(/'/g, "\\'")}', '${event.name.replace(/'/g, "\\'")}', '${event.id}')"
+                  >
+                  ${event.station_coordinates ? renderMiniStationMarkers(event.station_coordinates) : ''}
+                </div>
+                ${event.station_coordinates ? `
+                  <div class="map-legend">
+                    <div class="map-legend-item"><div class="legend-dot station"></div> Station</div>
+                    <div class="map-legend-item"><div class="legend-dot roxzone"></div> Roxzone</div>
+                    <div class="map-legend-item"><div class="legend-dot start"></div> Start/Finish</div>
+                    <span style="margin-left:auto;font-size:.65rem;">
+                      ${Object.keys(event.station_coordinates).filter(k => k.startsWith('station_')).length}/8 stations mapped
+                    </span>
+                  </div>
+                ` : ''}
               ` : `
                 <div class="event-map-placeholder">
                   <div class="map-icon">\u{1F5FA}\u{FE0F}</div>
@@ -470,21 +609,177 @@
       grid.querySelectorAll('.fade-in').forEach(el => observer.observe(el))
     }
 
+    // ── Station marker rendering helpers ──
+
+    // Station tips for each workout
+    const stationTips = {
+      1: { name: 'SkiErg', detail: '1000m · Pace yourself early, strong finish' },
+      2: { name: 'Sled Push', detail: '50m · Low stance, drive through legs' },
+      3: { name: 'Sled Pull', detail: '50m · Hand-over-hand, lean back' },
+      4: { name: 'Burpee Broad Jump', detail: '80m · Find your rhythm, min rest' },
+      5: { name: 'Rowing', detail: '1000m · 2:00/500m pace target' },
+      6: { name: 'Farmers Carry', detail: '200m · Grip training pays off here' },
+      7: { name: 'Sandbag Lunges', detail: '100m · Short steps, upright torso' },
+      8: { name: 'Wall Balls', detail: '75/100 reps · Sets of 10-15, breathe' },
+    }
+
+    function renderMiniStationMarkers(coords) {
+      if (!coords) return ''
+      const parsed = typeof coords === 'string' ? JSON.parse(coords) : coords
+      let html = '<div class="station-overlay" style="pointer-events:none;">'
+
+      for (const [key, val] of Object.entries(parsed)) {
+        const x = val.x, y = val.y
+        if (key === 'roxzone') {
+          html += `<div class="station-marker roxzone" style="left:${x}%;top:${y}%;pointer-events:none;">
+            <div class="station-dot" style="width:18px;height:18px;font-size:7px;">RZ</div>
+          </div>`
+        } else if (key === 'start_finish') {
+          html += `<div class="station-marker start-finish" style="left:${x}%;top:${y}%;pointer-events:none;">
+            <div class="station-dot" style="width:18px;height:18px;font-size:6px;">S/F</div>
+          </div>`
+        } else if (key.startsWith('station_')) {
+          const num = key.replace('station_', '')
+          html += `<div class="station-marker" style="left:${x}%;top:${y}%;pointer-events:none;">
+            <div class="station-dot" style="width:20px;height:20px;font-size:10px;">${num}</div>
+          </div>`
+        }
+      }
+      html += '</div>'
+      return html
+    }
+
+    function renderFullscreenStationMarkers(coords) {
+      const container = document.getElementById('mapOverlayStations')
+      const pathSvg = document.getElementById('mapOverlayPath')
+      container.innerHTML = ''
+      pathSvg.innerHTML = ''
+
+      if (!coords) return
+
+      const parsed = typeof coords === 'string' ? JSON.parse(coords) : coords
+
+      // Build station path (connect stations 1→2→3...→8 in order)
+      const stationPoints = []
+      for (let i = 1; i <= 8; i++) {
+        const s = parsed[`station_${i}`]
+        if (s) stationPoints.push({ x: s.x, y: s.y, num: i })
+      }
+
+      // Draw path line connecting stations
+      if (stationPoints.length >= 2) {
+        let pathD = `M ${stationPoints[0].x} ${stationPoints[0].y}`
+        for (let i = 1; i < stationPoints.length; i++) {
+          pathD += ` L ${stationPoints[i].x} ${stationPoints[i].y}`
+        }
+        pathSvg.setAttribute('viewBox', '0 0 100 100')
+        pathSvg.setAttribute('preserveAspectRatio', 'none')
+        pathSvg.innerHTML = `<path class="station-path-line" d="${pathD}" vector-effect="non-scaling-stroke"/>`
+      }
+
+      // Render station markers
+      for (const [key, val] of Object.entries(parsed)) {
+        const x = val.x, y = val.y
+        const marker = document.createElement('div')
+        marker.className = 'station-marker'
+        marker.style.cssText = `left:${x}%;top:${y}%;`
+
+        if (key === 'roxzone') {
+          marker.classList.add('roxzone')
+          marker.innerHTML = `
+            <div class="station-dot">RZ</div>
+            <div class="station-label">ROXZONE</div>`
+          marker.addEventListener('click', (e) => {
+            e.stopPropagation()
+            showStationTooltip(x, y, 'ROXZONE', 'Transition area between running and workout stations')
+          })
+        } else if (key === 'start_finish') {
+          marker.classList.add('start-finish')
+          marker.innerHTML = `
+            <div class="station-dot">S/F</div>
+            <div class="station-label">START/FINISH</div>`
+          marker.addEventListener('click', (e) => {
+            e.stopPropagation()
+            showStationTooltip(x, y, 'START / FINISH', 'Race start and finish line')
+          })
+        } else if (key.startsWith('station_')) {
+          const num = parseInt(key.replace('station_', ''))
+          const tip = stationTips[num] || { name: `Station ${num}`, detail: '' }
+          marker.innerHTML = `
+            <div class="station-dot">${num}</div>
+            <div class="station-label">${tip.name}</div>`
+          marker.addEventListener('click', (e) => {
+            e.stopPropagation()
+            showStationTooltip(x, y, `Station ${num}: ${tip.name}`, tip.detail)
+          })
+        }
+
+        container.appendChild(marker)
+      }
+    }
+
+    function showStationTooltip(x, y, title, detail) {
+      const tooltip = document.getElementById('stationTooltip')
+      const container = document.getElementById('mapOverlayContainer')
+      const rect = container.getBoundingClientRect()
+
+      tooltip.querySelector('#tooltipTitle').textContent = title
+      tooltip.querySelector('#tooltipDetail').textContent = detail
+
+      // Position tooltip above the station marker
+      const px = rect.left + (x / 100) * rect.width
+      const py = rect.top + (y / 100) * rect.height - 20
+      tooltip.style.left = `${px}px`
+      tooltip.style.top = `${py}px`
+      tooltip.classList.add('visible')
+
+      // Auto-hide after 3 seconds
+      clearTimeout(window._tooltipTimer)
+      window._tooltipTimer = setTimeout(() => {
+        tooltip.classList.remove('visible')
+      }, 3000)
+    }
+
+    // Store coordinates for all events (keyed by event ID)
+    const eventCoordsMap = {}
+    allEvents.forEach(e => {
+      if (e.station_coordinates) {
+        eventCoordsMap[e.id] = e.station_coordinates
+      }
+    })
+
     // ── Fullscreen map overlay ──
     const overlay = document.getElementById('mapOverlay')
     const overlayImg = document.getElementById('mapOverlayImg')
     const overlayTitle = document.getElementById('mapOverlayTitle')
 
-    window._showMap = function(url, title) {
+    window._showMap = function(url, title, eventId) {
       overlayImg.src = url
       overlayTitle.textContent = title
       overlay.classList.add('active')
       document.body.style.overflow = 'hidden'
+
+      // Render interactive stations if coordinates exist
+      const coords = eventCoordsMap[eventId]
+      renderFullscreenStationMarkers(coords)
+
+      // Hide tooltip
+      document.getElementById('stationTooltip').classList.remove('visible')
     }
+
+    // Toggle controls
+    document.getElementById('toggleStations').addEventListener('change', (e) => {
+      document.getElementById('mapOverlayStations').style.display = e.target.checked ? '' : 'none'
+    })
+    document.getElementById('togglePath').addEventListener('change', (e) => {
+      document.getElementById('mapOverlayPath').style.display = e.target.checked ? '' : 'none'
+    })
 
     document.getElementById('mapOverlayClose').addEventListener('click', closeMap)
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay) closeMap()
+      // Also hide tooltip when clicking empty space
+      document.getElementById('stationTooltip').classList.remove('visible')
     })
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') closeMap()
@@ -493,6 +788,7 @@
     function closeMap() {
       overlay.classList.remove('active')
       document.body.style.overflow = ''
+      document.getElementById('stationTooltip').classList.remove('visible')
     }
   </script>
 </body>

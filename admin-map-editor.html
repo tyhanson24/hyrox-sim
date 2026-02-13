@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Map Station Editor — HYROX SIM Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/global.css">
+  <style>
+    .admin-page {
+      min-height: 100vh; padding: 6rem 2rem 4rem;
+      background: var(--dark);
+    }
+    .admin-container { max-width: 1200px; margin: 0 auto; }
+
+    .admin-header { margin-bottom: 2rem; }
+    .admin-header h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem; color: #fff; letter-spacing: 2px;
+    }
+    .admin-header h1 .accent { color: var(--neon); }
+
+    .admin-grid {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 1.5rem;
+    }
+
+    /* Map canvas area */
+    .map-canvas-area {
+      background: var(--card); border: 1px solid var(--card-border);
+      padding: 1rem; position: relative;
+    }
+    .map-canvas-wrapper {
+      position: relative; cursor: crosshair;
+      display: inline-block;
+    }
+    .map-canvas-wrapper img {
+      width: 100%; display: block;
+    }
+    .placed-marker {
+      position: absolute; transform: translate(-50%, -50%);
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 800; color: #000;
+      cursor: move; z-index: 5;
+      border: 2px solid rgba(0,0,0,.6);
+      box-shadow: 0 0 8px rgba(200,255,0,.5);
+    }
+    .placed-marker.station { background: var(--neon); }
+    .placed-marker.roxzone { background: #ff3c00; color: #fff; }
+    .placed-marker.start_finish { background: #fff; }
+    .placed-marker:hover {
+      transform: translate(-50%, -50%) scale(1.2);
+      box-shadow: 0 0 16px rgba(200,255,0,.8);
+    }
+
+    /* Sidebar */
+    .sidebar {
+      background: var(--card); border: 1px solid var(--card-border);
+      padding: 1.5rem;
+    }
+    .sidebar h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.3rem; color: #fff; letter-spacing: 1px;
+      margin-bottom: 1rem;
+    }
+
+    .event-select {
+      width: 100%; padding: .6rem; margin-bottom: 1rem;
+      background: #1a1a1a; border: 1px solid #333; color: #fff;
+      font-family: 'Inter', sans-serif; font-size: .85rem;
+    }
+
+    .placement-mode {
+      margin-bottom: 1.5rem;
+    }
+    .placement-mode label {
+      display: block; font-size: .75rem; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 1px; margin-bottom: .5rem;
+    }
+    .mode-btn {
+      display: block; width: 100%; padding: .5rem;
+      margin-bottom: .4rem; text-align: left;
+      background: #1a1a1a; border: 1px solid #333;
+      color: var(--text-muted); font-size: .8rem;
+      cursor: pointer; transition: all .2s;
+      font-family: 'Inter', sans-serif;
+    }
+    .mode-btn:hover { border-color: #555; color: #fff; }
+    .mode-btn.active { border-color: var(--neon); color: var(--neon); background: rgba(200,255,0,.05); }
+    .mode-btn .mode-dot {
+      display: inline-block; width: 10px; height: 10px;
+      border-radius: 50%; margin-right: .5rem; vertical-align: middle;
+    }
+    .mode-dot.station-dot { background: var(--neon); }
+    .mode-dot.roxzone-dot { background: #ff3c00; }
+    .mode-dot.start-dot { background: #fff; }
+
+    .coords-list {
+      margin-bottom: 1.5rem;
+    }
+    .coords-list h3 {
+      font-size: .75rem; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 1px;
+      margin-bottom: .5rem;
+    }
+    .coord-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: .4rem .6rem; margin-bottom: .3rem;
+      background: rgba(255,255,255,.03); font-size: .8rem;
+    }
+    .coord-item .coord-name { color: #fff; font-weight: 600; }
+    .coord-item .coord-pos { color: var(--text-muted); font-family: monospace; font-size: .75rem; }
+    .coord-item .coord-remove {
+      background: none; border: none; color: #ff3c00;
+      cursor: pointer; font-size: 1rem; padding: 0 .3rem;
+    }
+
+    .action-btn {
+      width: 100%; padding: .7rem; margin-bottom: .5rem;
+      font-family: 'Inter', sans-serif; font-size: .85rem;
+      font-weight: 700; cursor: pointer; border: none;
+      text-transform: uppercase; letter-spacing: 1px;
+      transition: all .2s;
+    }
+    .action-btn.save {
+      background: var(--neon); color: #000;
+    }
+    .action-btn.save:hover { background: #d4ff33; }
+    .action-btn.copy {
+      background: transparent; border: 1px solid var(--neon);
+      color: var(--neon);
+    }
+    .action-btn.copy:hover { background: rgba(200,255,0,.1); }
+    .action-btn.clear {
+      background: transparent; border: 1px solid #ff3c00;
+      color: #ff3c00;
+    }
+
+    .json-output {
+      width: 100%; min-height: 120px; padding: .6rem;
+      background: #111; border: 1px solid #333; color: var(--neon);
+      font-family: monospace; font-size: .7rem;
+      resize: vertical; margin-top: .5rem;
+    }
+
+    .status-msg {
+      margin-top: .5rem; font-size: .8rem; padding: .5rem;
+      text-align: center;
+    }
+    .status-msg.success { color: var(--neon); background: rgba(200,255,0,.05); }
+    .status-msg.error { color: #ff3c00; background: rgba(255,60,0,.05); }
+
+    @media (max-width: 900px) {
+      .admin-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="logo">HYROX<span>SIM</span></a>
+    <ul class="nav-links">
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="events.html">Events</a></li>
+    </ul>
+    <div class="nav-right">
+      <a href="login.html" class="nav-cta">Sign In</a>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+  <div class="mobile-menu" id="mobileMenu">
+    <button class="mobile-close" id="mobileClose" aria-label="Close menu">&times;</button>
+    <a href="dashboard.html" class="mobile-nav-link">Dashboard</a>
+    <a href="events.html" class="mobile-nav-link">Events</a>
+  </div>
+
+  <div class="admin-page">
+    <div class="admin-container">
+
+      <div class="admin-header">
+        <h1>STATION <span class="accent">MAP EDITOR</span></h1>
+        <p style="color:var(--text-muted);font-size:.85rem;margin-top:.3rem;">
+          Click on the venue map to place station markers. Coordinates are saved as percentages.
+        </p>
+      </div>
+
+      <div class="admin-grid">
+        <!-- Map Canvas -->
+        <div class="map-canvas-area">
+          <div id="mapStatus" style="color:var(--text-muted);padding:3rem;text-align:center;">
+            Select an event with a venue map to begin editing.
+          </div>
+          <div class="map-canvas-wrapper" id="mapCanvas" style="display:none;">
+            <img id="mapImage" src="" alt="Venue Map">
+            <div id="markersContainer"></div>
+          </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+          <h2>Event Selection</h2>
+          <select class="event-select" id="eventSelect">
+            <option value="">Loading events...</option>
+          </select>
+
+          <div class="placement-mode">
+            <label>Click to Place</label>
+            <button class="mode-btn active" data-mode="station_1"><span class="mode-dot station-dot"></span> Station 1 — SkiErg</button>
+            <button class="mode-btn" data-mode="station_2"><span class="mode-dot station-dot"></span> Station 2 — Sled Push</button>
+            <button class="mode-btn" data-mode="station_3"><span class="mode-dot station-dot"></span> Station 3 — Sled Pull</button>
+            <button class="mode-btn" data-mode="station_4"><span class="mode-dot station-dot"></span> Station 4 — Burpee BJ</button>
+            <button class="mode-btn" data-mode="station_5"><span class="mode-dot station-dot"></span> Station 5 — Rowing</button>
+            <button class="mode-btn" data-mode="station_6"><span class="mode-dot station-dot"></span> Station 6 — Farmers Carry</button>
+            <button class="mode-btn" data-mode="station_7"><span class="mode-dot station-dot"></span> Station 7 — Sandbag Lunges</button>
+            <button class="mode-btn" data-mode="station_8"><span class="mode-dot station-dot"></span> Station 8 — Wall Balls</button>
+            <button class="mode-btn" data-mode="roxzone"><span class="mode-dot roxzone-dot"></span> ROXZONE</button>
+            <button class="mode-btn" data-mode="start_finish"><span class="mode-dot start-dot"></span> Start/Finish</button>
+          </div>
+
+          <div class="coords-list">
+            <h3>Placed Markers</h3>
+            <div id="coordsList"></div>
+          </div>
+
+          <button class="action-btn save" id="saveBtn">Save to Supabase</button>
+          <button class="action-btn copy" id="copyBtn">Copy JSON</button>
+          <button class="action-btn clear" id="clearBtn">Clear All</button>
+
+          <textarea class="json-output" id="jsonOutput" readonly></textarea>
+          <div id="statusMsg"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script type="module">
+    import { initPage } from './js/shared.js'
+    import { supabase } from './js/supabase-client.js'
+
+    initPage()
+
+    const stationNames = {
+      station_1: 'SkiErg', station_2: 'Sled Push', station_3: 'Sled Pull',
+      station_4: 'Burpee BJ', station_5: 'Rowing', station_6: 'Farmers Carry',
+      station_7: 'Sandbag Lunges', station_8: 'Wall Balls',
+      roxzone: 'ROXZONE', start_finish: 'Start/Finish',
+    }
+
+    let currentMode = 'station_1'
+    let coordinates = {}
+    let selectedEventId = null
+
+    // ── Load events with maps ──
+    const { data: events } = await supabase
+      .from('hyrox_events')
+      .select('id, name, city, country, venue_map_url, station_coordinates')
+      .not('venue_map_url', 'is', null)
+      .eq('is_active', true)
+      .order('event_date', { ascending: true })
+
+    const select = document.getElementById('eventSelect')
+    select.innerHTML = '<option value="">Choose an event...</option>'
+    ;(events || []).forEach(e => {
+      const hasCoords = !!e.station_coordinates
+      const opt = document.createElement('option')
+      opt.value = e.id
+      opt.textContent = `${e.name} (${e.city})${hasCoords ? ' ✓' : ''}`
+      opt.dataset.mapUrl = e.venue_map_url
+      opt.dataset.coords = e.station_coordinates ? JSON.stringify(e.station_coordinates) : ''
+      select.appendChild(opt)
+    })
+
+    select.addEventListener('change', () => {
+      const opt = select.selectedOptions[0]
+      if (!opt || !opt.value) return
+      selectedEventId = opt.value
+
+      // Load map image
+      const mapUrl = opt.dataset.mapUrl
+      document.getElementById('mapCanvas').style.display = 'block'
+      document.getElementById('mapStatus').style.display = 'none'
+      document.getElementById('mapImage').src = mapUrl
+
+      // Load existing coordinates if any
+      coordinates = {}
+      if (opt.dataset.coords) {
+        try {
+          coordinates = JSON.parse(opt.dataset.coords)
+        } catch (e) {}
+      }
+      renderMarkers()
+      updateJson()
+    })
+
+    // ── Mode selection ──
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'))
+        btn.classList.add('active')
+        currentMode = btn.dataset.mode
+      })
+    })
+
+    // ── Click on map to place marker ──
+    document.getElementById('mapCanvas').addEventListener('click', (e) => {
+      const img = document.getElementById('mapImage')
+      const rect = img.getBoundingClientRect()
+      const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1)
+      const y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1)
+
+      coordinates[currentMode] = {
+        x: parseFloat(x),
+        y: parseFloat(y),
+        name: stationNames[currentMode] || currentMode,
+      }
+
+      renderMarkers()
+      updateJson()
+
+      // Auto-advance to next station
+      const modes = Object.keys(stationNames)
+      const currentIdx = modes.indexOf(currentMode)
+      if (currentIdx < modes.length - 1) {
+        currentMode = modes[currentIdx + 1]
+        document.querySelectorAll('.mode-btn').forEach(b => {
+          b.classList.toggle('active', b.dataset.mode === currentMode)
+        })
+      }
+    })
+
+    function renderMarkers() {
+      const container = document.getElementById('markersContainer')
+      container.innerHTML = ''
+
+      for (const [key, val] of Object.entries(coordinates)) {
+        const marker = document.createElement('div')
+        marker.className = `placed-marker ${key.startsWith('station') ? 'station' : key}`
+
+        const label = key.startsWith('station_')
+          ? key.replace('station_', '')
+          : (key === 'roxzone' ? 'RZ' : 'S/F')
+
+        marker.textContent = label
+        marker.style.left = `${val.x}%`
+        marker.style.top = `${val.y}%`
+        container.appendChild(marker)
+      }
+
+      // Update coords list in sidebar
+      const list = document.getElementById('coordsList')
+      list.innerHTML = ''
+      for (const [key, val] of Object.entries(coordinates)) {
+        const item = document.createElement('div')
+        item.className = 'coord-item'
+        item.innerHTML = `
+          <span class="coord-name">${val.name}</span>
+          <span class="coord-pos">(${val.x}, ${val.y})</span>
+          <button class="coord-remove" data-key="${key}">&times;</button>
+        `
+        list.appendChild(item)
+      }
+
+      // Remove handler
+      list.querySelectorAll('.coord-remove').forEach(btn => {
+        btn.addEventListener('click', () => {
+          delete coordinates[btn.dataset.key]
+          renderMarkers()
+          updateJson()
+        })
+      })
+    }
+
+    function updateJson() {
+      document.getElementById('jsonOutput').value = JSON.stringify(coordinates, null, 2)
+    }
+
+    // ── Save to Supabase ──
+    document.getElementById('saveBtn').addEventListener('click', async () => {
+      if (!selectedEventId) {
+        showStatus('Select an event first', 'error')
+        return
+      }
+
+      const stationCount = Object.keys(coordinates).filter(k => k.startsWith('station_')).length
+      if (stationCount < 3) {
+        showStatus('Place at least 3 stations before saving', 'error')
+        return
+      }
+
+      const { error } = await supabase
+        .from('hyrox_events')
+        .update({ station_coordinates: coordinates })
+        .eq('id', selectedEventId)
+
+      if (error) {
+        showStatus(`Error: ${error.message}`, 'error')
+      } else {
+        showStatus(`Saved ${stationCount} stations + ${Object.keys(coordinates).length - stationCount} landmarks`, 'success')
+      }
+    })
+
+    // ── Copy JSON ──
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      navigator.clipboard.writeText(JSON.stringify(coordinates, null, 2))
+      showStatus('JSON copied to clipboard', 'success')
+    })
+
+    // ── Clear All ──
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      coordinates = {}
+      renderMarkers()
+      updateJson()
+    })
+
+    function showStatus(msg, type) {
+      const el = document.getElementById('statusMsg')
+      el.className = `status-msg ${type}`
+      el.textContent = msg
+      setTimeout(() => { el.textContent = '' }, 3000)
+    }
+  </script>
+</body>
+</html>
