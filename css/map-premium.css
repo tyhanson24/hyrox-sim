@@ -254,7 +254,8 @@
 .map-overlay-viewport {
   position: relative;
   flex: 1;
-  min-height: 300px;
+  min-height: 0;
+  width: 100%;
   overflow: hidden;
 }
 

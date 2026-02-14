@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/global.css">
   <link rel="stylesheet" href="css/map-premium.css">
+  <script src="js/config.js"></script>
   <script type="importmap">
   {
     "imports": {
@@ -161,17 +162,15 @@
     /* Fullscreen Map Overlay */
     .map-overlay {
       position: fixed; inset: 0; z-index: 9999;
-      background: rgba(0,0,0,.95);
+      background: rgba(0,0,0,.97);
       display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
       opacity: 0; pointer-events: none;
       transition: opacity .3s;
     }
     .map-overlay.active { opacity: 1; pointer-events: all; }
     .map-overlay-header {
-      position: absolute; top: 0; left: 0; right: 0;
       display: flex; justify-content: space-between; align-items: center;
-      padding: 1rem 1.5rem; z-index: 2;
+      padding: 1rem 1.5rem; z-index: 2; flex-shrink: 0;
     }
     .map-overlay-title {
       font-family: 'Bebas Neue', sans-serif;
@@ -188,8 +187,8 @@
       max-width: 95vw; max-height: 85vh; object-fit: contain;
     }
     .map-overlay-hint {
-      position: absolute; bottom: 1.5rem;
-      font-size: .75rem; color: var(--text-muted);
+      text-align: center; padding: .5rem;
+      font-size: .75rem; color: var(--text-muted); flex-shrink: 0;
     }
 
     /* Interactive Map Container */
@@ -370,10 +369,10 @@
     </div>
 
     <!-- Viewport: contains all mode views -->
-    <div class="map-overlay-viewport" style="max-width:95vw;max-height:75vh;position:relative;">
+    <div class="map-overlay-viewport">
       <!-- Mode: Stations (original static overlay) -->
-      <div class="interactive-map-container" id="mapOverlayContainer" style="max-width:95vw;max-height:75vh;">
-        <img id="mapOverlayImg" src="" alt="Venue Map" style="max-width:95vw;max-height:75vh;object-fit:contain;">
+      <div class="interactive-map-container" id="mapOverlayContainer">
+        <img id="mapOverlayImg" src="" alt="Venue Map" style="width:100%;height:100%;object-fit:contain;">
         <div class="station-overlay" id="mapOverlayStations"></div>
         <svg class="station-path-svg" id="mapOverlayPath"></svg>
       </div>
@@ -435,7 +434,7 @@
         </div>
         <div class="events-stat">
           <div class="events-stat-value" id="statMaps">0</div>
-          <div class="events-stat-label">Maps Available</div>
+          <div class="events-stat-label">Course Maps</div>
         </div>
         <div class="events-stat">
           <div class="events-stat-value" id="statCountries">0</div>
@@ -560,7 +559,7 @@
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     const upcoming = allEvents.filter(e => e.event_date && new Date(e.event_date + 'T00:00:00') >= today)
-    const withMaps = allEvents.filter(e => e.venue_map_url)
+    const withMaps = allEvents.filter(e => e.venue_map_url || e.station_coordinates || e.venue_latitude)
 
     document.getElementById('statTotal').textContent = allEvents.length
     document.getElementById('statUpcoming').textContent = upcoming.length
@@ -603,9 +602,12 @@
         const countdown = getCountdown(event.event_date)
         const ticket = ticketConfig[event.ticket_status] || ticketConfig['coming_soon']
         const hasMap = !!event.venue_map_url
+        const hasCoords = !!event.station_coordinates
+        const hasGeo = !!(event.venue_latitude && event.venue_longitude)
+        const hasAnyMapFeature = hasMap || hasCoords || hasGeo
 
         return `
-          <div class="event-card fade-in ${hasMap ? 'has-map' : ''}">
+          <div class="event-card fade-in ${hasAnyMapFeature ? 'has-map' : ''}">
             <div class="event-card-header">
               <h3>${event.name}</h3>
               <span class="event-flag">${flag}</span>
@@ -633,9 +635,9 @@
                     loading="lazy"
                     onclick="window._showMap('${event.venue_map_url.replace(/'/g, "\\'")}', '${event.name.replace(/'/g, "\\'")}', '${event.id}')"
                   >
-                  ${event.station_coordinates ? renderMiniStationMarkers(event.station_coordinates) : ''}
+                  ${hasCoords ? renderMiniStationMarkers(event.station_coordinates) : ''}
                 </div>
-                ${event.station_coordinates ? `
+                ${hasCoords ? `
                   <div class="map-legend">
                     <div class="map-legend-item"><div class="legend-dot station"></div> Station</div>
                     <div class="map-legend-item"><div class="legend-dot roxzone"></div> Roxzone</div>
@@ -645,6 +647,17 @@
                     </span>
                   </div>
                 ` : ''}
+              ` : hasAnyMapFeature ? `
+                <div class="event-map-preview"
+                     onclick="window._showMap('', '${event.name.replace(/'/g, "\\'")}', '${event.id}')"
+                     style="aspect-ratio:16/10;background:linear-gradient(135deg,#0a0a0a 0%,#1a1a1a 50%,#0a0a0a 100%);border-radius:8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1px solid #222;">
+                  <div style="display:flex;gap:12px;align-items:center;">
+                    ${hasCoords ? '<span style="font-size:1.1rem;opacity:.7;">&#9881;</span>' : ''}
+                    ${hasGeo ? '<span style="font-size:1.1rem;opacity:.7;">&#127760;</span>' : ''}
+                  </div>
+                  <span style="color:#c8ff00;font-size:.85rem;font-weight:600;">View Course</span>
+                  <span style="color:#888;font-size:.7rem;">${hasCoords && hasGeo ? 'Track · Satellite · 3D' : hasCoords ? 'Track · 3D' : 'Satellite'}</span>
+                </div>
               ` : `
                 <div class="event-map-placeholder">
                   <div class="map-icon">\u{1F5FA}\u{FE0F}</div>
@@ -821,15 +834,18 @@
     let scene3D = null
 
     window._showMap = function(url, title, eventId) {
-      overlayImg.src = url
+      if (url) {
+        overlayImg.src = url
+        overlayImg.style.display = ''
+      } else {
+        overlayImg.src = ''
+        overlayImg.style.display = 'none'
+      }
       overlayTitle.textContent = title
       currentEventId = eventId
       currentMapUrl = url
       overlay.classList.add('active')
       document.body.style.overflow = 'hidden'
-
-      // Always reset to stations mode
-      switchMode('stations')
 
       // Render interactive stations if coordinates exist
       const coords = eventCoordsMap[eventId]
@@ -839,23 +855,25 @@
       const trackTab = document.querySelector('[data-mode="track"]')
       const mapTab = document.querySelector('[data-mode="map"]')
       const threeDTab = document.querySelector('[data-mode="3d"]')
+      const stationsTab = document.querySelector('[data-mode="stations"]')
 
       const hasCoords = coords && Object.keys(coords).filter(k => k.startsWith('station_')).length >= 2
-
-      if (hasCoords) {
-        trackTab.classList.remove('disabled')
-        threeDTab.classList.remove('disabled')
-      } else {
-        trackTab.classList.add('disabled')
-        threeDTab.classList.add('disabled')
-      }
-
-      // Enable map tab if the event has geo coordinates
       const eventData = allEvents.find(e => e.id === eventId)
-      if (eventData?.venue_latitude && eventData?.venue_longitude) {
-        mapTab.classList.remove('disabled')
+      const hasGeo = !!(eventData?.venue_latitude && eventData?.venue_longitude)
+
+      trackTab.classList.toggle('disabled', !hasCoords)
+      threeDTab.classList.toggle('disabled', !hasCoords)
+      mapTab.classList.toggle('disabled', !hasGeo)
+
+      // Pick the best default mode based on available data
+      if (url) {
+        switchMode('stations')
+      } else if (hasGeo) {
+        switchMode('map')
+      } else if (hasCoords) {
+        switchMode('track')
       } else {
-        mapTab.classList.add('disabled')
+        switchMode('stations')
       }
 
       // Hide tooltip
@@ -920,6 +938,66 @@
       }
     }
 
+    // ── Build Splits for Tracker ──
+    // Tries user's real simulation data first, falls back to HYROX reference pace
+    async function buildSplitsForEvent(eventId, coords) {
+      const stationKeys = Object.keys(coords).filter(k => k.startsWith('station_'))
+      const numStations = stationKeys.length
+
+      // Try to load user's real simulation results for this event
+      try {
+        const { getSession } = await import('./js/auth.js')
+        const session = await getSession()
+        if (session?.user) {
+          const { data: simResults } = await supabase
+            .from('simulation_results')
+            .select('splits, total_time_ms')
+            .eq('user_id', session.user.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+
+          if (simResults?.length && simResults[0].splits?.length) {
+            return simResults[0].splits
+          }
+        }
+      } catch (e) {
+        // Not logged in or no results — fall through to reference pace
+      }
+
+      // HYROX reference pace splits (based on average open division ~65 min finish)
+      // Run segments: ~4:00-4:15 each, Workout segments: ~3:30-5:00 depending on station
+      const referencePace = [
+        { name: 'Run 1',      timeMs: 245000 },
+        { name: 'SkiErg',     timeMs: 210000 },
+        { name: 'Run 2',      timeMs: 250000 },
+        { name: 'Sled Push',  timeMs: 270000 },
+        { name: 'Run 3',      timeMs: 255000 },
+        { name: 'Sled Pull',  timeMs: 240000 },
+        { name: 'Run 4',      timeMs: 250000 },
+        { name: 'Burpee BJ',  timeMs: 300000 },
+        { name: 'Run 5',      timeMs: 260000 },
+        { name: 'Rowing',     timeMs: 240000 },
+        { name: 'Run 6',      timeMs: 255000 },
+        { name: 'Farmers',    timeMs: 210000 },
+        { name: 'Run 7',      timeMs: 260000 },
+        { name: 'Lunges',     timeMs: 270000 },
+        { name: 'Run 8',      timeMs: 265000 },
+        { name: 'Wall Balls', timeMs: 240000 }
+      ]
+
+      const splits = []
+      for (let i = 0; i < numStations; i++) {
+        const stationData = coords[`station_${i + 1}`]
+        const runRef = referencePace[i * 2] || { name: `Run ${i + 1}`, timeMs: 250000 }
+        const wxRef = referencePace[i * 2 + 1] || { name: stationData?.name || `Station ${i + 1}`, timeMs: 240000 }
+
+        splits.push({ stationNum: i + 1, timeMs: runRef.timeMs, name: runRef.name })
+        splits.push({ stationNum: i + 1, timeMs: wxRef.timeMs, name: wxRef.name })
+      }
+
+      return splits
+    }
+
     // ── Course Tracker Init ──
     async function initTracker() {
       const coords = eventCoordsMap[currentEventId]
@@ -938,30 +1016,8 @@
       canvas.style.width = viewport.offsetWidth + 'px'
       canvas.style.height = viewport.offsetHeight + 'px'
 
-      // Build demo splits from station data (equal splits totaling ~60 min)
-      // In production these would come from simulation_results or race_results
-      const stationKeys = Object.keys(coords).filter(k => k.startsWith('station_'))
-      const numStations = stationKeys.length
-      const splitTimeMs = Math.floor(60 * 60 * 1000 / (numStations * 2)) // ~3:45 per segment
-
-      const splits = []
-      for (let i = 1; i <= numStations; i++) {
-        const stationData = coords[`station_${i}`]
-        if (stationData) {
-          // Run segment
-          splits.push({
-            stationNum: i,
-            timeMs: splitTimeMs + Math.floor(Math.random() * 30000 - 15000),
-            name: `Run ${i}`
-          })
-          // Workout segment
-          splits.push({
-            stationNum: i,
-            timeMs: splitTimeMs + Math.floor(Math.random() * 40000 - 20000),
-            name: stationData.name || `Station ${i}`
-          })
-        }
-      }
+      // Build splits from user's simulation data, or use HYROX reference pace
+      const splits = await buildSplitsForEvent(currentEventId, coords)
 
       tracker = new CourseTrackerModule.CourseTracker(canvas, {
         coordinates: coords,
@@ -984,6 +1040,10 @@
       // Lazy-load VenueRealMap module
       if (!VenueRealMapModule) {
         VenueRealMapModule = await import('./js/venue-map-real.js')
+        // Set token from config
+        if (window.__APP_CONFIG?.MAPBOX_TOKEN) {
+          VenueRealMapModule.default.MAPBOX_TOKEN = window.__APP_CONFIG.MAPBOX_TOKEN
+        }
       }
 
       const container = document.getElementById('mapboxContainer')
