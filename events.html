@@ -7,6 +7,15 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/map-premium.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
   <style>
     .events-page {
       min-height: 100vh; padding: 6rem 2rem 4rem;
@@ -333,32 +342,77 @@
     <a href="profile.html" class="mobile-nav-link">Profile</a>
   </div>
 
-  <!-- Fullscreen Map Overlay (Interactive) -->
+  <!-- Fullscreen Map Overlay (Premium Multi-Mode) -->
   <div class="map-overlay" id="mapOverlay">
     <div class="map-overlay-header">
       <span class="map-overlay-title" id="mapOverlayTitle"></span>
-      <div style="display:flex;align-items:center;gap:.8rem;">
-        <label style="display:flex;align-items:center;gap:.4rem;font-size:.75rem;color:var(--text-muted);cursor:pointer;">
-          <input type="checkbox" id="toggleStations" checked style="accent-color:var(--neon);">
-          Stations
-        </label>
-        <label style="display:flex;align-items:center;gap:.4rem;font-size:.75rem;color:var(--text-muted);cursor:pointer;">
-          <input type="checkbox" id="togglePath" checked style="accent-color:var(--neon);">
-          Path
-        </label>
+      <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
+        <!-- Mode Switcher -->
+        <div class="map-mode-switcher" id="modeSwitcher">
+          <button class="mode-tab active" data-mode="stations">Stations</button>
+          <button class="mode-tab" data-mode="track">Track</button>
+          <button class="mode-tab disabled" data-mode="map" title="Satellite view">Map</button>
+          <button class="mode-tab disabled" data-mode="3d" title="3D visualization">3D</button>
+        </div>
+        <!-- Station/Path toggles (only visible in Stations mode) -->
+        <div id="stationToggles" style="display:flex;gap:.8rem;">
+          <label style="display:flex;align-items:center;gap:.4rem;font-size:.75rem;color:var(--text-muted);cursor:pointer;">
+            <input type="checkbox" id="toggleStations" checked style="accent-color:var(--neon);">
+            Stations
+          </label>
+          <label style="display:flex;align-items:center;gap:.4rem;font-size:.75rem;color:var(--text-muted);cursor:pointer;">
+            <input type="checkbox" id="togglePath" checked style="accent-color:var(--neon);">
+            Path
+          </label>
+        </div>
         <button class="map-overlay-close" id="mapOverlayClose">&times;</button>
       </div>
     </div>
-    <div class="interactive-map-container" id="mapOverlayContainer" style="max-width:95vw;max-height:85vh;">
-      <img id="mapOverlayImg" src="" alt="Venue Map" style="max-width:95vw;max-height:85vh;object-fit:contain;">
-      <div class="station-overlay" id="mapOverlayStations"></div>
-      <svg class="station-path-svg" id="mapOverlayPath"></svg>
+
+    <!-- Viewport: contains all mode views -->
+    <div class="map-overlay-viewport" style="max-width:95vw;max-height:75vh;position:relative;">
+      <!-- Mode: Stations (original static overlay) -->
+      <div class="interactive-map-container" id="mapOverlayContainer" style="max-width:95vw;max-height:75vh;">
+        <img id="mapOverlayImg" src="" alt="Venue Map" style="max-width:95vw;max-height:75vh;object-fit:contain;">
+        <div class="station-overlay" id="mapOverlayStations"></div>
+        <svg class="station-path-svg" id="mapOverlayPath"></svg>
+      </div>
+
+      <!-- Mode: Track (Canvas animated course tracker) -->
+      <div class="tracker-canvas-container" id="trackerContainer">
+        <canvas id="courseTrackerCanvas"></canvas>
+      </div>
+
+      <!-- Mode: Map (Mapbox — Phase 2) -->
+      <div class="mapbox-container" id="mapboxContainer"></div>
+
+      <!-- Mode: 3D (Three.js — Phase 3) -->
+      <div class="three-container" id="threeContainer">
+        <canvas id="three3DCanvas"></canvas>
+      </div>
     </div>
+
+    <!-- Tracker Controls (visible only in Track mode) -->
+    <div class="tracker-controls" id="trackerControls">
+      <button class="tracker-btn" id="trackerRestart" title="Restart">&#x23EE;</button>
+      <button class="tracker-btn play-btn" id="trackerPlayPause" title="Play">&#x25B6;</button>
+      <div class="speed-selector" id="speedSelector">
+        <button class="speed-btn" data-speed="1">1×</button>
+        <button class="speed-btn" data-speed="2">2×</button>
+        <button class="speed-btn" data-speed="5">5×</button>
+        <button class="speed-btn active" data-speed="10">10×</button>
+      </div>
+      <div class="ghost-toggle" id="ghostToggle">
+        <div class="ghost-dot"></div>
+        <span>Ghost</span>
+      </div>
+    </div>
+
     <div class="station-tooltip" id="stationTooltip">
       <h4 id="tooltipTitle"></h4>
       <div class="tip-detail" id="tooltipDetail"></div>
     </div>
-    <span class="map-overlay-hint">Click a station for details · Pinch to zoom on mobile</span>
+    <span class="map-overlay-hint" id="overlayHint">Click a station for details · Pinch to zoom on mobile</span>
   </div>
 
   <div class="events-page">
@@ -753,19 +807,276 @@
     const overlayImg = document.getElementById('mapOverlayImg')
     const overlayTitle = document.getElementById('mapOverlayTitle')
 
+    // Mode management
+    let currentMode = 'stations'
+    let currentEventId = null
+    let currentMapUrl = null
+    let tracker = null
+
+    // Lazy imports
+    let CourseTrackerModule = null
+    let VenueRealMapModule = null
+    let Venue3DModule = null
+    let realMap = null
+    let scene3D = null
+
     window._showMap = function(url, title, eventId) {
       overlayImg.src = url
       overlayTitle.textContent = title
+      currentEventId = eventId
+      currentMapUrl = url
       overlay.classList.add('active')
       document.body.style.overflow = 'hidden'
+
+      // Always reset to stations mode
+      switchMode('stations')
 
       // Render interactive stations if coordinates exist
       const coords = eventCoordsMap[eventId]
       renderFullscreenStationMarkers(coords)
 
+      // Enable/disable modes based on available data
+      const trackTab = document.querySelector('[data-mode="track"]')
+      const mapTab = document.querySelector('[data-mode="map"]')
+      const threeDTab = document.querySelector('[data-mode="3d"]')
+
+      const hasCoords = coords && Object.keys(coords).filter(k => k.startsWith('station_')).length >= 2
+
+      if (hasCoords) {
+        trackTab.classList.remove('disabled')
+        threeDTab.classList.remove('disabled')
+      } else {
+        trackTab.classList.add('disabled')
+        threeDTab.classList.add('disabled')
+      }
+
+      // Enable map tab if the event has geo coordinates
+      const eventData = allEvents.find(e => e.id === eventId)
+      if (eventData?.venue_latitude && eventData?.venue_longitude) {
+        mapTab.classList.remove('disabled')
+      } else {
+        mapTab.classList.add('disabled')
+      }
+
       // Hide tooltip
       document.getElementById('stationTooltip').classList.remove('visible')
     }
+
+    // ── Mode Switcher ──
+    document.querySelectorAll('.mode-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        if (tab.classList.contains('disabled')) return
+        switchMode(tab.dataset.mode)
+      })
+    })
+
+    async function switchMode(mode) {
+      currentMode = mode
+
+      // Update tabs
+      document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'))
+      document.querySelector(`[data-mode="${mode}"]`)?.classList.add('active')
+
+      // Hide all view containers
+      document.getElementById('mapOverlayContainer').style.display = 'none'
+      document.getElementById('trackerContainer').classList.remove('active')
+      document.getElementById('mapboxContainer').classList.remove('active')
+      document.getElementById('threeContainer').classList.remove('active')
+      document.getElementById('trackerControls').classList.remove('active')
+      document.getElementById('stationToggles').style.display = 'none'
+
+      // Destroy existing tracker/map/scene
+      if (tracker) { tracker.destroy(); tracker = null }
+      if (realMap) { realMap.destroy(); realMap = null }
+      if (scene3D) { scene3D.destroy(); scene3D = null }
+
+      const hint = document.getElementById('overlayHint')
+
+      switch (mode) {
+        case 'stations':
+          document.getElementById('mapOverlayContainer').style.display = ''
+          document.getElementById('stationToggles').style.display = 'flex'
+          hint.textContent = 'Click a station for details · Pinch to zoom on mobile'
+          break
+
+        case 'track':
+          document.getElementById('trackerContainer').classList.add('active')
+          document.getElementById('trackerControls').classList.add('active')
+          hint.textContent = 'Press play to animate the race course · Adjust speed below'
+          await initTracker()
+          break
+
+        case 'map':
+          document.getElementById('mapboxContainer').classList.add('active')
+          hint.textContent = 'Satellite view · Drag to pan, scroll to zoom'
+          await initRealMap()
+          break
+
+        case '3d':
+          document.getElementById('threeContainer').classList.add('active')
+          hint.textContent = 'Drag to orbit · Scroll to zoom · Click play for flythrough'
+          await init3DScene()
+          break
+      }
+    }
+
+    // ── Course Tracker Init ──
+    async function initTracker() {
+      const coords = eventCoordsMap[currentEventId]
+      if (!coords) return
+
+      // Lazy-load CourseTracker module
+      if (!CourseTrackerModule) {
+        CourseTrackerModule = await import('./js/course-tracker.js')
+      }
+
+      const canvas = document.getElementById('courseTrackerCanvas')
+      const container = document.getElementById('trackerContainer')
+
+      // Size canvas to fill the viewport area
+      const viewport = document.querySelector('.map-overlay-viewport')
+      canvas.style.width = viewport.offsetWidth + 'px'
+      canvas.style.height = viewport.offsetHeight + 'px'
+
+      // Build demo splits from station data (equal splits totaling ~60 min)
+      // In production these would come from simulation_results or race_results
+      const stationKeys = Object.keys(coords).filter(k => k.startsWith('station_'))
+      const numStations = stationKeys.length
+      const splitTimeMs = Math.floor(60 * 60 * 1000 / (numStations * 2)) // ~3:45 per segment
+
+      const splits = []
+      for (let i = 1; i <= numStations; i++) {
+        const stationData = coords[`station_${i}`]
+        if (stationData) {
+          // Run segment
+          splits.push({
+            stationNum: i,
+            timeMs: splitTimeMs + Math.floor(Math.random() * 30000 - 15000),
+            name: `Run ${i}`
+          })
+          // Workout segment
+          splits.push({
+            stationNum: i,
+            timeMs: splitTimeMs + Math.floor(Math.random() * 40000 - 20000),
+            name: stationData.name || `Station ${i}`
+          })
+        }
+      }
+
+      tracker = new CourseTrackerModule.CourseTracker(canvas, {
+        coordinates: coords,
+        mapImageUrl: currentMapUrl,
+        splits
+      })
+
+      // Update play/pause button state
+      updatePlayPauseBtn()
+    }
+
+    // ── Mapbox Real Map Init ──
+    async function initRealMap() {
+      const eventData = allEvents.find(e => e.id === currentEventId)
+      if (!eventData?.venue_latitude || !eventData?.venue_longitude) return
+
+      const coords = eventCoordsMap[currentEventId]
+      if (!coords) return
+
+      // Lazy-load VenueRealMap module
+      if (!VenueRealMapModule) {
+        VenueRealMapModule = await import('./js/venue-map-real.js')
+      }
+
+      const container = document.getElementById('mapboxContainer')
+
+      // Show loading spinner
+      container.innerHTML = `
+        <div class="map-loading">
+          <div class="map-loading-ring"></div>
+          <div class="map-loading-text">Loading satellite view...</div>
+        </div>`
+
+      realMap = new VenueRealMapModule.VenueRealMap(container, {
+        coordinates: coords,
+        lat: eventData.venue_latitude,
+        lng: eventData.venue_longitude,
+        mapImageUrl: currentMapUrl
+      })
+    }
+
+    // ── Three.js 3D Scene Init ──
+    async function init3DScene() {
+      const coords = eventCoordsMap[currentEventId]
+      if (!coords) return
+
+      // Lazy-load Venue3DScene module
+      if (!Venue3DModule) {
+        Venue3DModule = await import('./js/venue-3d.js')
+      }
+
+      const canvas = document.getElementById('three3DCanvas')
+      const container = document.getElementById('threeContainer')
+
+      // Size canvas
+      const viewport = document.querySelector('.map-overlay-viewport')
+      canvas.style.width = viewport.offsetWidth + 'px'
+      canvas.style.height = viewport.offsetHeight + 'px'
+
+      scene3D = new Venue3DModule.Venue3DScene(canvas, {
+        coordinates: coords,
+        mapImageUrl: currentMapUrl
+      })
+    }
+
+    // ── Tracker Controls ──
+    const playPauseBtn = document.getElementById('trackerPlayPause')
+    const restartBtn = document.getElementById('trackerRestart')
+    const ghostToggleBtn = document.getElementById('ghostToggle')
+
+    playPauseBtn.addEventListener('click', () => {
+      if (!tracker) return
+      if (tracker.isPlaying) {
+        tracker.pause()
+      } else {
+        tracker.play()
+      }
+      updatePlayPauseBtn()
+    })
+
+    restartBtn.addEventListener('click', () => {
+      if (!tracker) return
+      tracker.restart()
+      tracker.play()
+      updatePlayPauseBtn()
+    })
+
+    function updatePlayPauseBtn() {
+      if (tracker?.isPlaying) {
+        playPauseBtn.innerHTML = '&#x23F8;'  // pause
+        playPauseBtn.classList.add('playing')
+        playPauseBtn.title = 'Pause'
+      } else {
+        playPauseBtn.innerHTML = '&#x25B6;'  // play
+        playPauseBtn.classList.remove('playing')
+        playPauseBtn.title = 'Play'
+      }
+    }
+
+    // Speed selector
+    document.querySelectorAll('.speed-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const speed = parseInt(btn.dataset.speed)
+        if (tracker) tracker.setSpeed(speed)
+        document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'))
+        btn.classList.add('active')
+      })
+    })
+
+    // Ghost toggle
+    ghostToggleBtn.addEventListener('click', () => {
+      if (!tracker) return
+      tracker.toggleGhost()
+      ghostToggleBtn.classList.toggle('active')
+    })
 
     // Toggle controls
     document.getElementById('toggleStations').addEventListener('change', (e) => {
@@ -789,6 +1100,11 @@
       overlay.classList.remove('active')
       document.body.style.overflow = ''
       document.getElementById('stationTooltip').classList.remove('visible')
+
+      // Clean up all visualizations
+      if (tracker) { tracker.destroy(); tracker = null }
+      if (realMap) { realMap.destroy(); realMap = null }
+      if (scene3D) { scene3D.destroy(); scene3D = null }
     }
   </script>
 </body>
